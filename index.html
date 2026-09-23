@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#000000">
+<link rel="apple-touch-icon" href="icon-192.png">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Internet Billing System</title>
+  <link rel="stylesheet" href="style.css?v=23" />
+</head>
+<body><div id="loginScreen" class="login-screen">
+  <div class="login-card">
+    <h1>NetBill</h1>
+    <p>Internet Billing System</p>
+
+    <label>Email
+      <input id="loginEmail" type="email" placeholder="Enter email" />
+    </label>
+
+    <label>Password
+      <input id="loginPassword" type="password" placeholder="Enter password" />
+    </label>
+
+    <button id="loginBtn" class="primary">Login</button>
+    <p id="loginMessage" class="login-message"></p>
+  </div>
+</div>
+  <div id="installGate" class="hidden">
+  <div class="install-gate-card">
+    <h1>Install NetBill App</h1>
+    <p>To continue, please install the NetBill app on your device.</p>
+    <p><strong>Installation is required before using the system.</strong></p>
+    <button id="installAppBtn" class="primary">Install NetBill App</button>
+    <p id="installHelp">Tap the button above to install.</p>
+  </div>
+</div>
+  <div id="appShell" class="app-shell hidden">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">NB</div>
+        <div>
+          <h1>NetBill</h1>
+          <p>Internet Billing</p>
+          <div class="powered-by">Powered by <em>CM Philippines</em></div>
+        </div>
+      </div>
+      <nav>
+        <button class="nav-btn active" data-section="dashboard">Dashboard</button>
+        <button class="nav-btn" data-section="customers">Customers</button>
+        <button class="nav-btn" data-section="billing">Billing</button>
+        <button class="nav-btn" data-section="payments">Payments</button>
+        <button class="nav-btn" data-section="ledger">Ledger</button>
+        <button class="nav-btn" data-section="reports">Reports</button>
+        <button id="logoutBtn" class="nav-btn">Logout</button>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <h2 id="pageTitle">Dashboard</h2>
+          <p>Manage customer accounts, bills, balances, and payments.</p>
+        </div>
+        <button id="quickAddBtn" class="primary">+ Add Customer</button>
+      </header>
+
+      <section id="dashboard" class="section active">
+        <div class="cards">
+          <div class="card metric">
+            <span>Total Customers</span>
+            <strong id="totalCustomers">0</strong>
+          </div>
+          <div class="card metric">
+            <span>Active Accounts</span>
+            <strong id="activeCustomers">0</strong>
+          </div>
+          <div class="card metric">
+            <span>Unpaid / Overdue</span>
+            <strong id="unpaidCustomers">0</strong>
+          </div>
+          <div class="card metric">
+            <span>Total Collected</span>
+            <strong id="totalCollected">₱0.00</strong>
+          </div>
+          <div class="card metric">
+            <span>Outstanding Balance</span>
+            <strong id="outstandingBalance">₱0.00</strong>
+          </div>
+        </div>
+
+        <div class="card dashboard-table">
+          <div class="section-head">
+            <div>
+              <h3>Recent Customers</h3>
+              <p>Latest customer account records.</p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Account No.</th>
+                  <th>Name</th>
+                  <th>Plan</th>
+                  <th>Balance</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="recentCustomerTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="customers" class="section">
+        <div class="section-head">
+          <div>
+            <h3>Customer Accounts</h3>
+            <p>Add and manage subscriber information.</p>
+          </div>
+          <button id="addCustomerBtn" class="primary">+ Add Customer</button>
+        </div>
+
+        <div class="filters">
+          <input id="customerSearch" type="search" placeholder="Search name or account no." />
+          <select id="statusFilter">
+            <option value="">All Status</option>
+            <option value="Paid">Paid</option>
+            <option value="Unpaid">Unpaid</option>
+            <option value="Overdue">Overdue</option>
+          </select>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Account No.</th>
+                <th>Customer</th>
+                <th>Contact</th>
+                <th>Plan</th>
+                <th>Monthly Rate</th>
+                <th>Due Date</th>
+                <th>Balance</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="customerTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="billing" class="section">
+        <div class="section-head">
+          <div>
+            <h3>Billing</h3>
+            <p>Create or refresh a customer's monthly bill.</p>
+          </div>
+        </div>
+
+        <div class="card form-grid">
+          <label>Customer
+            <select id="billCustomer"></select>
+          </label>
+          <label>Billing Amount
+            <input id="billAmount" type="number" min="0" step="0.01" placeholder="0.00" />
+          </label>
+          <label>Due Date
+            <input id="billDueDate" type="date" />
+          </label>
+          <button id="createBillBtn" class="primary">Create / Update Bill</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Account No.</th>
+                <th>Customer</th>
+                <th>Current Bill</th>
+                <th>Balance</th>
+                <th>Due Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="billingTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="payments" class="section">
+        <div class="section-head">
+          <div>
+            <h3>Payments</h3>
+            <p>Record customer payments and print receipts.</p>
+          </div>
+        </div>
+
+        <div class="card form-grid">
+          <label>Search Customer</label>
+<input id="paymentSearch" type="text" placeholder="Search name or account no.">
+
+<label>Customer</label>
+<select id="paymentCustomer">
+  <option value="">Search customer first</option>
+</select>
+          </label>
+          <label>Amount Paid
+            <input id="paymentAmount" type="number" min="0" step="0.01" placeholder="0.00" />
+          </label>
+          <label>Payment Date</label>
+<input id="paymentDate" type="date" />
+
+<label>Payment Time</label>
+<input id="paymentTime" type="time" />
+          <label>Reference No.
+            <input id="paymentReference" type="text" placeholder="Optional" />
+          </label>
+          <label>Collected By
+            <input id="paymentIssuedBy" type="text" placeholder="Name of collector" />
+          </label>
+          <button id="recordPaymentBtn" class="primary">Record Payment</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Receipt No.</th>
+                <th>Customer</th>
+                <th>Amount</th>
+                <th>Reference</th>
+                <th>Issued By</th>
+                <th>Balance After</th>
+                <th>Receipt</th>
+              </tr>
+            </thead>
+            <tbody id="paymentTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+
+      <section id="ledger" class="section">
+        <div class="section-head">
+          <div>
+            <h3>Customer Ledger</h3>
+            <p>View bills, payments, previous balances, and running balances per customer.</p>
+          </div>
+        </div>
+
+        <div class="card form-grid">
+          <label>Customer
+            <select id="ledgerCustomer"></select>
+          </label>
+          <button id="viewLedgerBtn" class="primary">View Ledger</button>
+        </div>
+
+        <div class="card ledger-summary">
+          <div><span>Customer</span><strong id="ledgerName">-</strong></div>
+          <div><span>Account No.</span><strong id="ledgerAccount">-</strong></div>
+          <div><span>Current Balance</span><strong id="ledgerBalance">₱0.00</strong></div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Previous Balance</th>
+                <th>Charge</th>
+                <th>Payment</th>
+                <th>Running Balance</th>
+                <th>Reference</th>
+              </tr>
+            </thead>
+            <tbody id="ledgerTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="reports" class="section">
+        <div class="cards">
+          <div class="card metric">
+            <span>Total Payments</span>
+            <strong id="reportPayments">0</strong>
+          </div>
+          <div class="card metric">
+            <span>Total Revenue</span>
+            <strong id="reportRevenue">₱0.00</strong>
+          </div>
+          <div class="card metric">
+            <span>Total Receivables</span>
+            <strong id="reportReceivables">₱0.00</strong>
+          </div>
+        </div>
+
+        <div class="card report-box">
+          <h3>Account Status Summary</h3>
+          <div id="statusSummary" class="summary-grid"></div>
+        </div>
+
+        <div class="card report-box monthly-report-box">
+          <div class="section-head">
+            <div>
+              <h3>Collection History</h3>
+              <p>Generate monthly or yearly collection reports for backtracking.</p>
+            </div>
+            <button id="downloadCollectionBtn" class="primary">Download Excel</button>
+          </div>
+
+          <div class="filters report-filters">
+            <label>Report Type
+              <select id="collectionReportType">
+                <option value="monthly">Monthly Report</option>
+                <option value="yearly">Yearly Report</option>
+              </select>
+            </label>
+
+            <label>Year
+              <select id="collectionYearFilter"></select>
+            </label>
+
+            <label id="collectionMonthLabel">Month
+              <select id="collectionMonthFilter">
+                <option value="01">January</option>
+                <option value="02">February</option>
+                <option value="03">March</option>
+                <option value="04">April</option>
+                <option value="05">May</option>
+                <option value="06">June</option>
+                <option value="07">July</option>
+                <option value="08">August</option>
+                <option value="09">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+              </select>
+            </label>
+          </div>
+
+          <div id="collectionReportSummary" class="summary-grid"></div>
+
+          <div class="table-wrap">
+            <table class="report-table">
+              <thead id="collectionTableHead"></thead>
+              <tbody id="monthlyCollectionTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card report-box">
+          <div class="section-head">
+            <div>
+              <h3>Overdue Customers</h3>
+              <p>Customers with an unpaid balance past their due date.</p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="report-table">
+              <thead>
+                <tr>
+                  <th>Account No.</th>
+                  <th>Customer</th>
+                  <th>Due Date</th>
+                  <th>Balance</th>
+                </tr>
+              </thead>
+              <tbody id="overdueCustomerTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="customerModal" class="modal hidden">
+    <div class="modal-box">
+      <div class="modal-title">
+        <h3 id="customerModalTitle">Add Customer</h3>
+        <button id="closeCustomerModal" class="icon-btn">×</button>
+      </div>
+
+      <div class="modal-grid">
+        <label>Account No.
+          <input id="accountNo" type="text" placeholder="e.g. NB-0001" />
+        </label>
+        <label>Full Name
+          <input id="customerName" type="text" />
+        </label>
+        <label>Address
+          <input id="customerAddress" type="text" />
+        </label>
+        <label>Contact No.
+          <input id="customerContact" type="text" />
+        </label>
+        <label>Internet Plan
+          <input id="customerPlan" type="text" placeholder="e.g. 50 Mbps" />
+        </label>
+        <label>Monthly Rate
+          <input id="customerFee" type="number" min="0" step="0.01" />
+        </label>
+        <label>Activation Date
+          <input id="activationDate" type="date" />
+          <div class="form-group">
+            <label for="initialPaymentStatus">Initial Payment Status</label>
+            <select id="initialPaymentStatus">
+              <option value="paid">Paid upon activation</option>
+              <option value="unpaid">Unpaid</option>
+            </select>
+          </div>
+        </label>
+        <label>Billing Due Date
+          <input id="customerDue" type="date" />
+        </label>
+      </div>
+
+      <div class="modal-actions">
+        <button id="cancelCustomerBtn" class="secondary">Cancel</button>
+        <button id="saveCustomerBtn" class="primary">Save Customer</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="receiptModal" class="modal hidden">
+    <div class="modal-box receipt-box">
+      <div id="receiptContent"></div>
+      <div class="modal-actions no-print">
+        <button id="closeReceiptBtn" class="secondary">Close</button>
+        <button id="downloadReceiptBtn" class="primary">Download Receipt</button>
+        <button id="printReceiptBtn" class="primary">Print Receipt</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+ <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js?v=24"></script>
+</body>
+</html>
