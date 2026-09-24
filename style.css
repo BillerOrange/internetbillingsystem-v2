@@ -11,6 +11,22 @@ button{cursor:pointer}
 .sidebar nav{display:flex;flex-direction:column;gap:8px}
 .nav-btn{background:transparent;color:#d1d5db;border:0;text-align:left;padding:12px 14px;border-radius:9px}
 .nav-btn:hover,.nav-btn.active{background:var(--primary);color:#fff}
+@keyframes advanceDueBlink{
+  0%, 100%{
+    background:#fff;
+    color:var(--primary);
+    box-shadow:0 0 0 2px #fff;
+  }
+  50%{
+    background:transparent;
+    color:#fff;
+    box-shadow:none;
+  }
+}
+
+.nav-btn.advance-due-blink:not(.active){
+  animation:advanceDueBlink 1s infinite;
+}
 .main-content{flex:1;padding:26px;min-width:0}
 .topbar{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:24px}
 .topbar h2{margin:0;font-size:28px}.topbar p{margin:6px 0 0;color:var(--muted)}
