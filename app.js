@@ -1148,6 +1148,18 @@ function setupPaymentSearch(){
     });
   }
 }
+function renderAdvanceReceipts(){
+  const table = document.getElementById('advanceReceiptTable');
+  if(!table) return;
+
+  table.innerHTML = `
+    <tr>
+      <td colspan="6" style="text-align:center;">
+        No advance payment receipts due today.
+      </td>
+    </tr>
+  `;
+}
 function renderAll(){
   cleanupPaidActivationDuplicates();
   setupPaymentSearch();
@@ -1156,6 +1168,7 @@ function renderAll(){
   renderBilling();
   renderPayments();
   renderReports();
+  renderAdvanceReceipts();
   fillCustomerSelects();
   renderLedger();
   saveData();
