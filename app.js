@@ -1507,13 +1507,7 @@ if(isAdvance){
   }
 
   advanceFor = toISODateLocal(targetDate);
-  alert(
-  'ADVANCE TRACE\n' +
-  'isAdvance: ' + isAdvance + '\n' +
-  'c.dueDate: ' + c.dueDate + '\n' +
-  'targetDate: ' + targetDate + '\n' +
-  'advanceFor: ' + advanceFor
-);
+  
 }
   
 const { data: latestBill } = await supabaseClient
@@ -1596,15 +1590,7 @@ window.showReceipt = receiptNo => {
   const p = payments.find(x => 
   x.receiptNo === receiptNo
 );
-alert(
-  'TRACE\n' +
-  'receiptNo: ' + receiptNo + '\n' +
-  'p.receiptNo: ' + p?.receiptNo + '\n' +
-  'p.isAdvance: ' + p?.isAdvance + '\n' +
-  'p.advanceFor: ' + p?.advanceFor + '\n' +
-  'p.is_advance: ' + p?.is_advance + '\n' +
-  'p.advance_for_date: ' + p?.advance_for_date
-);
+
   if (!p) {
     alert('Payment record not found.');
     return;
