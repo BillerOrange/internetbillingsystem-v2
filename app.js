@@ -583,7 +583,29 @@ async function runAutomaticMonthlyBilling(){
         const previousBalance = Number(c.balance || 0);
         const charge = Number(c.fee || 0);
         const newBalance = previousBalance + charge;
+const { data: advancePayments, error: advanceCheckError } = await supabaseClient
+  .from('payments')
+  .select('id, receipt_no, payment_date, payment_time, collected_by')
+  .eq('client_id', c.id)
+  .eq('is_advance', true)
+  .eq('advance_for', cycleISO)
+  .limit(1);
 
+if(advanceCheckError){
+  console.error('Error checking advance payment:', advanceCheckError);
+  cycleDate = addMonthsClamped(cycleDate, 1);
+  safety++;
+  continue;
+}
+
+const advancePayment =
+  advancePayments && advancePayments.length > 0
+    ? advancePayments[0]
+    : null;
+        
+        const finalBalance = advancePayment
+  ? previousBalance
+  : newBalance;
         const { error: billError } = await supabaseClient
           .from('billing')
           .insert([{
@@ -592,7 +614,7 @@ async function runAutomaticMonthlyBilling(){
             previous_balance: previousBalance,
             current_charge: charge,
             due_date: cycleISO,
-            status: 'Unpaid',
+            status: advancePayment ? 'Paid' : 'Unpaid',
             description: 'Automatic monthly internet bill'
           }]);
 
@@ -607,7 +629,7 @@ async function runAutomaticMonthlyBilling(){
   .from('clients')
   .update({
     current_bill: charge,
-    balance: newBalance,
+    balance: finalBalance,
     due_date: cycleISO
   })
   .eq('id', c.id);
@@ -633,7 +655,7 @@ if(clientError){
 }
 
         c.currentBill = charge;
-        c.balance = newBalance;
+        c.balance = finalBalance;
         c.dueDate = cycleISO;
 
         addLedgerEntry({
@@ -644,7 +666,7 @@ if(clientError){
           previousBalance,
           charge,
           payment: 0,
-          runningBalance: newBalance,
+          runningBalance: finalBalance,
           reference: cycleKey
         });
       }
@@ -1430,14 +1452,60 @@ console.log("SELECTED CUSTOMER:", c);
     return;
   }
 
-  if(amount > Number(c.balance || 0)){
-    if(!confirm('Payment is higher than the current balance. Continue?')) return;
+  const previousBalance = Number(c.balance || 0);
+const isAdvance = previousBalance === 0;
+
+if(!isAdvance && amount > previousBalance){
+  alert('Please pay only up to the current balance first. Once the balance is zero, you can make a separate advance payment.');
+  return;
+}
+
+if(isAdvance && amount !== Number(c.fee || 0)){
+  alert(`Advance payment must be exactly the monthly rate: ₱${Number(c.fee || 0).toLocaleString()}`);
+  return;
+}
+
+const newBalance = isAdvance
+  ? 0
+  : Math.max(0, previousBalance - amount);
+
+const receiptNo = await nextReceiptNo();
+let advanceFor = null;
+
+if(isAdvance){
+  let targetDate = parseLocalDate(c.dueDate);
+
+  if(!targetDate){
+    alert('Customer has no valid due date for advance payment.');
+    return;
   }
 
-  const previousBalance = Number(c.balance || 0);
-const newBalance = Math.max(0, previousBalance - amount);
-const receiptNo = await nextReceiptNo();
+  const { data: existingAdvances, error: advanceError } = await supabaseClient
+    .from('payments')
+    .select('advance_for')
+    .eq('client_id', c.id)
+    .eq('is_advance', true)
+    .order('advance_for', { ascending: true });
 
+  if(advanceError){
+    console.error(advanceError);
+    alert('Error checking previous advance payments: ' + advanceError.message);
+    return;
+  }
+
+  const reservedDates = new Set(
+    (existingAdvances || [])
+      .map(p => p.advance_for)
+      .filter(Boolean)
+  );
+
+  while(reservedDates.has(toISODateLocal(targetDate))){
+    targetDate = addMonthsClamped(targetDate, 1);
+  }
+
+  advanceFor = toISODateLocal(targetDate);
+}
+  
 const { data: latestBill } = await supabaseClient
   .from('billing')
   .select('id')
@@ -1461,7 +1529,9 @@ const { data: savedPayment, error: paymentError } = await supabaseClient
     collector_email: '',
     collected_by: issuedBy,
     balance_before: previousBalance,
-    balance_after: newBalance
+    balance_after: newBalance,
+is_advance: isAdvance,
+advance_for: advanceFor
   }])
   .select()
   .single();
@@ -1496,7 +1566,9 @@ const payment = {
   paymentTime: time,
   reference: reference || receiptNo,
   issuedBy,
-  balanceAfter: newBalance
+  balanceAfter: newBalance,
+isAdvance: isAdvance,
+advanceFor: advanceFor
 };
 
 payments.push({...payment});
