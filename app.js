@@ -408,76 +408,61 @@ function addMonthsClamped(date, months){
 
 
 function recordInitialActivationPayment(customer, status){
-  if(!customer || status !== 'paid') return;
+    if(!customer || status !== 'paid') return;
 
-  const amount = Number(customer.monthly_rate ?? customer.fee ?? 0);
-  if(amount <= 0) return;
+    const amount = Number(customer.monthly_rate ?? customer.fee ?? 0);
+    if(amount <= 0) return;
 
-  const activationDate = customer.activation_date || customer.activationDate || todayISO();
-  const paymentKey = `ACTIVATION-PAID-${customer.id}`;
+    const activationDate = customer.activation_date || customer.activationDate || todayISO();
+    const paymentKey = `ACTIVATION-PAID-${customer.id}`;
 
-  const alreadyRecorded =
-    payments.some(p => p.reference === paymentKey) ||
-    ledgerEntries.some(e => e.reference === paymentKey);
+    const alreadyRecorded =
+        payments.some(p => p.reference === paymentKey) ||
+        ledgerEntries.some(e => e.reference === paymentKey);
 
-  if(alreadyRecorded) return;
+    if(alreadyRecorded) return;
 
-  // Remove the initial unpaid bill created during customer creation.
-  const initialIndex = ledgerEntries.findIndex(e =>
-    e.customerId == customer.id &&
-    e.date === activationDate &&
-    e.type === 'Bill' &&
-    (
-      e.description === 'Initial monthly bill' ||
-      String(e.reference || '').startsWith('Due ')
-    )
-  );
+    const receiptNo = nextReceiptNo();
 
-  if(initialIndex >= 0){
-    ledgerEntries.splice(initialIndex, 1);
-  }
+    payments.push({
+        id: Date.now() + Math.random(),
+        customerId: customer.id,
+        customerName: customer.name,
+        accountNo: customer.account_no,
+        date: activationDate,
+        amount: amount,
+        reference: paymentKey,
+        receiptNo: receiptNo,
+        balanceAfter: 0
+    });
 
-  const previousBalance = Number(customer.balance || 0);
-  const paymentAmount = Math.min(amount, previousBalance || amount);
+    addLedgerEntry({
+        customerId: customer.id,
+        date: activationDate,
+        type: 'Activation Bill (Paid)',
+        description: 'Activation monthly bill paid upon activation',
+        previousBalance: 0,
+        charge: amount,
+        payment: amount,
+        runningBalance: 0,
+        reference: paymentKey
+    });
 
-  customer.balance = Math.max(0, previousBalance - paymentAmount);
+    customer.currentBill = 0;
+    customer.balance = 0;
 
-  const receiptNo = nextReceiptNo();
+    for(let i = ledgerEntries.length - 1; i >= 0; i--){
+        const e = ledgerEntries[i];
 
-  payments.push({
-    id: Date.now() + Math.random(),
-    customerId: customer.id,
-    date: activationDate,
-    amount: paymentAmount,
-    reference: paymentKey,
-    receiptNo
-  });
-
-  addLedgerEntry({
-    customerId: customer.id,
-    date: activationDate,
-    type: 'Activation Bill (Paid)',
-    description: 'Activation monthly bill paid upon activation',
-    previousBalance: 0,
-    charge: amount,
-    payment: amount,
-    runningBalance: 0,
-    reference: paymentKey
-  });
-
-  // Remove any duplicate initial monthly bill for this activation date.
-  for(let i = ledgerEntries.length - 1; i >= 0; i--){
-    const e = ledgerEntries[i];
-
-    if(
-      e.customerId == customer.id &&
-      e.date === activationDate &&
-      e.type === 'Bill' &&
-      e.description === 'Initial monthly bill'
-    ){
-      ledgerEntries.splice(i, 1);
+        if(
+            e.customerId == customer.id &&
+            e.date === activationDate &&
+            e.type === 'Bill' &&
+            e.description === 'Initial monthly bill'
+        ){
+            ledgerEntries.splice(i, 1);
+        }
     }
-  }
 }
 
 
