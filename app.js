@@ -1691,6 +1691,10 @@ const createdDateTime =
       <h2>NETBILL</h2>
       <div class="center">Internet Billing System</div>
       <div class="center">Official Payment Receipt</div>
+      ${isAdvancePayment ? `
+<div class="center" style="font-weight:700; margin-top:8px;">ADVANCE PAYMENT</div>
+<div class="center">For Due Date: <strong>${advanceForDate}</strong></div>
+` : ''}
       <br>
       <div class="receipt-row"><span>Receipt No.</span><strong>${finalReceiptNo}</strong></div>
       <div class="receipt-row"><span>Date</span><strong>${finalDate}</strong></div>
@@ -1701,10 +1705,6 @@ const createdDateTime =
       <div class="receipt-row"><span>Plan</span><strong>${finalPlan}</strong></div>
       <div class="receipt-row"><span>Reference</span><strong>${finalReference}</strong></div>
       <div class="receipt-row"><span>Payment Received By</span><strong>${finalIssuedBy}</strong></div>
-      ${isAdvancePayment ? `
-  <div class="receipt-row"><span>Payment Type</span><strong>ADVANCE PAYMENT</strong></div>
-  <div class="receipt-row"><span>For Due Date</span><strong>${advanceForDate}</strong></div>
-` : ''}
       <div class="receipt-row receipt-total"><span>Amount Paid</span><strong>${money(finalAmount)}</strong></div>
       <div class="receipt-row"><span>Remaining Balance</span><strong>${money(finalBalance)}</strong></div>
       <div class="receipt-row"><span>CDT</span><strong>${createdDateTime}</strong></div>
