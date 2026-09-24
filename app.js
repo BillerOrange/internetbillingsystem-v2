@@ -536,31 +536,104 @@ function cleanupPaidActivationDuplicates(){
   }
 }
 
-function runAutomaticMonthlyBilling(){
+async function runAutomaticMonthlyBilling(){
   const today = parseLocalDate(todayISO());
   if(!today) return;
 
-  customers.forEach(c => {
-    const activation = parseLocalDate(c.activationDate);
-    if(!activation || Number(c.fee || 0) <= 0) return;
+  for(const c of customers){
+    if(Number(c.fee || 0) <= 0) continue;
 
-    // First recurring monthly bill is one month after activation.
-    let cycleDate = addMonthsClamped(activation, 1);
+    let cycleDate;
+
+    if(c.activationDate){
+      // Normal/new customer:
+      // first recurring bill is one month after activation.
+      const activation = parseLocalDate(c.activationDate);
+      if(!activation) continue;
+
+      cycleDate = addMonthsClamped(activation, 1);
+    } else {
+      // Existing customer:
+      // entered Due Date is the first recurring billing date.
+      cycleDate = parseLocalDate(c.dueDate);
+      if(!cycleDate) continue;
+    }
+
     let safety = 0;
 
     while(cycleDate <= today && safety < 240){
       const cycleISO = toISODateLocal(cycleDate);
       const cycleKey = `AUTO-${c.id}-${cycleISO}`;
 
-      const alreadyBilled = ledgerEntries.some(e =>
-        e.customerId === c.id && e.reference === cycleKey
-      );
+      // Check Supabase first to prevent duplicate monthly billing.
+      const { data: existingBills, error: checkError } = await supabaseClient
+        .from('billing')
+        .select('id')
+        .eq('client_id', c.id)
+        .eq('due_date', cycleISO);
 
-      if(!alreadyBilled){
+      if(checkError){
+        console.error('Error checking automatic bill:', checkError);
+        cycleDate = addMonthsClamped(cycleDate, 1);
+        safety++;
+        continue;
+      }
+
+      if(!existingBills || existingBills.length === 0){
         const previousBalance = Number(c.balance || 0);
         const charge = Number(c.fee || 0);
+        const newBalance = previousBalance + charge;
+
+        const { error: billError } = await supabaseClient
+          .from('billing')
+          .insert([{
+            client_id: c.id,
+            billing_month: cycleISO,
+            previous_balance: previousBalance,
+            current_charge: charge,
+            due_date: cycleISO,
+            status: 'Unpaid',
+            description: 'Automatic monthly internet bill'
+          }]);
+
+        if(billError){
+          console.error('Error saving automatic bill:', billError);
+          cycleDate = addMonthsClamped(cycleDate, 1);
+          safety++;
+          continue;
+        }
+
+        const { error: clientError } = await supabaseClient
+  .from('clients')
+  .update({
+    current_bill: charge,
+    balance: newBalance,
+    due_date: cycleISO
+  })
+  .eq('id', c.id);
+
+if(clientError){
+  console.error('Error updating automatic customer balance:', clientError);
+
+  // Remove the bill that was just created so it can safely retry next time.
+  const { error: rollbackError } = await supabaseClient
+    .from('billing')
+    .delete()
+    .eq('client_id', c.id)
+    .eq('due_date', cycleISO)
+    .eq('description', 'Automatic monthly internet bill');
+
+  if(rollbackError){
+    console.error('Error rolling back automatic bill:', rollbackError);
+  }
+
+  cycleDate = addMonthsClamped(cycleDate, 1);
+  safety++;
+  continue;
+}
+
         c.currentBill = charge;
-        c.balance = previousBalance + charge;
+        c.balance = newBalance;
         c.dueDate = cycleISO;
 
         addLedgerEntry({
@@ -571,7 +644,7 @@ function runAutomaticMonthlyBilling(){
           previousBalance,
           charge,
           payment: 0,
-          runningBalance: c.balance,
+          runningBalance: newBalance,
           reference: cycleKey
         });
       }
@@ -579,7 +652,7 @@ function runAutomaticMonthlyBilling(){
       cycleDate = addMonthsClamped(cycleDate, 1);
       safety++;
     }
-  });
+  }
 
   saveData();
 }
@@ -1129,7 +1202,75 @@ $('addCustomerBtn').addEventListener('click',()=>openCustomerModal());
 $('quickAddBtn').addEventListener('click',()=>openCustomerModal());
 $('closeCustomerModal').addEventListener('click',closeCustomerModal);
 $('cancelCustomerBtn').addEventListener('click',closeCustomerModal);
+function openExistingCustomerModal(){
+  $('existingCustomerName').value = '';
+  $('existingCustomerAddress').value = '';
+  $('existingCustomerContact').value = '';
+  $('existingCustomerPlan').value = '';
+  $('existingCustomerFee').value = '';
+  $('existingCustomerDue').value = '';
+  $('existingCustomerBalance').value = '0';
 
+  $('existingCustomerModal').classList.remove('hidden');
+}
+
+function closeExistingCustomerModal(){
+  $('existingCustomerModal').classList.add('hidden');
+}
+
+$('addExistingCustomerBtn').addEventListener('click',openExistingCustomerModal);
+$('closeExistingCustomerModal').addEventListener('click',closeExistingCustomerModal);
+$('cancelExistingCustomerBtn').addEventListener('click',closeExistingCustomerModal);
+$('saveExistingCustomerBtn').addEventListener('click', async ()=>{
+  const name = $('existingCustomerName').value.trim();
+  const address = $('existingCustomerAddress').value.trim();
+  const contact = $('existingCustomerContact').value.trim();
+  const plan = $('existingCustomerPlan').value.trim();
+  const fee = Number($('existingCustomerFee').value || 0);
+  const dueDate = $('existingCustomerDue').value;
+  const existingBalance = Number($('existingCustomerBalance').value || 0);
+
+  if(!name || !plan || fee <= 0 || !dueDate){
+    alert('Please complete Full Name, Internet Plan, Monthly Rate, and Due Date.');
+    return;
+  }
+
+  if(existingBalance < 0){
+    alert('Existing Balance cannot be negative.');
+    return;
+  }
+
+  const accountNo = nextAccountNo();
+
+  const { data, error } = await supabaseClient
+    .from('clients')
+    .insert([{
+      account_no: accountNo,
+      name: name,
+      address: address,
+      contact_no: contact,
+      internet_plan: plan,
+      monthly_rate: fee,
+      activation_date: null,
+      due_date: dueDate,
+      current_bill: 0,
+      balance: existingBalance,
+      is_active: true
+    }])
+    .select();
+
+  if(error){
+    console.error(error);
+    alert('Error saving existing customer: ' + error.message);
+    return;
+  }
+
+  alert('Existing customer saved successfully.');
+
+  await loadCustomersFromSupabase();
+  renderAll();
+  closeExistingCustomerModal();
+});
 $('saveCustomerBtn').addEventListener('click', async ()=>{
   const accountNo = $('accountNo').value.trim();
   const name = $('customerName').value.trim();
