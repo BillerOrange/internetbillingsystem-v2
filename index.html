@@ -52,6 +52,7 @@
         <button class="nav-btn" data-section="payments">Payments</button>
         <button class="nav-btn" data-section="ledger">Ledger</button>
         <button class="nav-btn" data-section="reports">Reports</button>
+        <button id="advanceReceiptNav" class="nav-btn" data-section="advance-receipts">ADV. PAYMENT RCPT</button>
         <button id="logoutBtn" class="nav-btn">Logout</button>
       </nav>
     </aside>
@@ -385,6 +386,28 @@
             </table>
           </div>
         </div>
+      </section>
+      <section id="advance-receipts" class="section">
+  <div class="card">
+    <h3>Advance Payment Receipts Due Today</h3>
+    <p>Advance payment receipts covering today's due date will appear here.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Account No.</th>
+            <th>Customer</th>
+            <th>Receipt No.</th>
+            <th>Amount</th>
+            <th>Covered Due Date</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="advanceReceiptTable"></tbody>
+      </table>
+    </div>
+  </div>
       </section>
     </main>
   </div>
