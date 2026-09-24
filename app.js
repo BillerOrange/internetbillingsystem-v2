@@ -1485,10 +1485,10 @@ if(isAdvance){
 
   const { data: existingAdvances, error: advanceError } = await supabaseClient
     .from('payments')
-    .select('advance_for')
+    .select('advance_for_date')
     .eq('client_id', c.id)
     .eq('is_advance', true)
-    .order('advance_for', { ascending: true });
+    .order('advance_for_date', { ascending: true });
 
   if(advanceError){
     console.error(advanceError);
@@ -1498,7 +1498,7 @@ if(isAdvance){
 
   const reservedDates = new Set(
     (existingAdvances || [])
-      .map(p => p.advance_for)
+      .map(p => p.advance_for_date)
       .filter(Boolean)
   );
 
