@@ -407,25 +407,67 @@ function addMonthsClamped(date, months){
 }
 
 
-function recordInitialActivationPayment(customer, status){
+async function recordInitialActivationPayment(customer, status){
     if(!customer || status !== 'paid') return;
 
     const amount = Number(customer.monthly_rate ?? customer.fee ?? 0);
     if(amount <= 0) return;
 
-    const activationDate = customer.activation_date || customer.activationDate || todayISO();
+    const activationDate =
+        customer.activation_date ||
+        customer.activationDate ||
+        todayISO();
+
     const paymentKey = `ACTIVATION-PAID-${customer.id}`;
 
-    const alreadyRecorded =
-        payments.some(p => p.reference === paymentKey) ||
-        ledgerEntries.some(e => e.reference === paymentKey);
+    // Check Supabase first so the activation payment is not duplicated.
+    const { data: existingPayments, error: checkError } = await supabaseClient
+        .from('payments')
+        .select('id, reference_no')
+        .eq('client_id', customer.id)
+        .eq('reference_no', paymentKey);
 
-    if(alreadyRecorded) return;
+    if(checkError){
+        console.error('Error checking activation payment:', checkError);
+        alert('Error checking activation payment: ' + checkError.message);
+        return;
+    }
+
+    if(existingPayments && existingPayments.length > 0){
+        return;
+    }
 
     const receiptNo = nextReceiptNo();
 
+    // Save the activation payment permanently in Supabase.
+    const { data: savedPayment, error: paymentError } = await supabaseClient
+        .from('payments')
+        .insert([{
+            billing_id: null,
+            client_id: customer.id,
+            amount: amount,
+            payment_date: activationDate,
+            payment_time: new Date().toTimeString().slice(0,5),
+            payment_method: 'Cash',
+            receipt_no: receiptNo,
+            reference_no: paymentKey,
+            notes: 'Activation payment',
+            collector_email: '',
+            collected_by: 'Activation',
+            balance_before: amount,
+            balance_after: 0
+        }])
+        .select()
+        .single();
+
+    if(paymentError){
+        console.error('Error saving activation payment:', paymentError);
+        alert('Error saving activation payment: ' + paymentError.message);
+        return;
+    }
+
     payments.push({
-        id: Date.now() + Math.random(),
+        id: savedPayment.id,
         customerId: customer.id,
         customerName: customer.name,
         accountNo: customer.account_no,
@@ -433,6 +475,7 @@ function recordInitialActivationPayment(customer, status){
         amount: amount,
         reference: paymentKey,
         receiptNo: receiptNo,
+        issuedBy: 'Activation',
         balanceAfter: 0
     });
 
@@ -451,6 +494,7 @@ function recordInitialActivationPayment(customer, status){
     customer.currentBill = 0;
     customer.balance = 0;
 
+    // Remove the local unpaid initial bill, if present.
     for(let i = ledgerEntries.length - 1; i >= 0; i--){
         const e = ledgerEntries[i];
 
@@ -1143,12 +1187,24 @@ balance: initialPaymentStatus === 'paid' ? 0 : fee,
 
   if(editingCustomerId && result.data?.[0]){
     if(initialPaymentStatus === 'paid'){
-        recordInitialActivationPayment(result.data[0], 'paid');
+        await recordInitialActivationPayment(result.data[0], 'paid');
     } else {
-        const paymentKey = `ACTIVATION-PAID-${result.data[0].id}`;
+    const paymentKey = `ACTIVATION-PAID-${result.data[0].id}`;
 
-        payments = payments.filter(p => p.reference !== paymentKey);
-        ledgerEntries = ledgerEntries.filter(e => e.reference !== paymentKey);
+    const { error: deletePaymentError } = await supabaseClient
+        .from('payments')
+        .delete()
+        .eq('client_id', result.data[0].id)
+        .eq('reference_no', paymentKey);
+
+    if(deletePaymentError){
+        console.error('Error removing activation payment:', deletePaymentError);
+        alert('Error removing activation payment: ' + deletePaymentError.message);
+        return;
+    }
+
+    payments = payments.filter(p => p.reference !== paymentKey);
+    ledgerEntries = ledgerEntries.filter(e => e.reference !== paymentKey);
     }
   }
 
