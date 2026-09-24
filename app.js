@@ -1507,6 +1507,13 @@ if(isAdvance){
   }
 
   advanceFor = toISODateLocal(targetDate);
+  alert(
+  'ADVANCE TRACE\n' +
+  'isAdvance: ' + isAdvance + '\n' +
+  'c.dueDate: ' + c.dueDate + '\n' +
+  'targetDate: ' + targetDate + '\n' +
+  'advanceFor: ' + advanceFor
+);
 }
   
 const { data: latestBill } = await supabaseClient
