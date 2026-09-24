@@ -1152,7 +1152,7 @@ function renderAdvanceReceipts(){
   const table = document.getElementById('advanceReceiptTable');
   if(!table) return;
 
-  const today = '2026-10-25';
+  const today = '2026-11-24';
 
   const dueAdvancePayments = payments.filter(p =>
     p.isAdvance === true &&
