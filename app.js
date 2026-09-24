@@ -537,7 +537,7 @@ function cleanupPaidActivationDuplicates(){
 }
 
 async function runAutomaticMonthlyBilling(){
-  const today = parseLocalDate(todayISO());
+  const today = parseLocalDate('2026-10-24');
   if(!today) return;
 
   for(const c of customers){
