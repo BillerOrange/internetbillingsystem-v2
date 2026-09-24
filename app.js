@@ -142,7 +142,7 @@ async function loadBillingAndPaymentsFromSupabase() {
   receiptNo: p.receipt_no || `OLD-RCPT-${String(index + 1).padStart(5,'0')}`,
   balanceAfter: Number(p.balance_after || 0),
   isAdvance: p.is_advance === true,
-  advanceForDate: p.advance_for_date || ''
+  advanceFor: p.advance_for || ''
 }));
 
   const billingLedger = (billingData || []).map(b => ({
