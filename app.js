@@ -1534,7 +1534,7 @@ const { data: savedPayment, error: paymentError } = await supabaseClient
     balance_before: previousBalance,
     balance_after: newBalance,
 is_advance: isAdvance,
-advance_for: advanceFor
+advance_for_date: advanceFor
   }])
   .select()
   .single();
