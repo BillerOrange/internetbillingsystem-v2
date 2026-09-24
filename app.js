@@ -1675,6 +1675,7 @@ const isAdvancePayment = p.isAdvance === true || p.is_advance === true;
 
 const advanceForDate =
   p.advanceFor ||
+  p.advance_for_date ||
   p.advance_for ||
   '';
 const createdDateTime =
