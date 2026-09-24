@@ -1152,13 +1152,44 @@ function renderAdvanceReceipts(){
   const table = document.getElementById('advanceReceiptTable');
   if(!table) return;
 
-  table.innerHTML = `
-    <tr>
-      <td colspan="6" style="text-align:center;">
-        No advance payment receipts due today.
-      </td>
-    </tr>
-  `;
+  const today = todayISO();
+
+  const dueAdvancePayments = payments.filter(p =>
+    p.isAdvance === true &&
+    p.advanceFor === today
+  );
+
+  if(!dueAdvancePayments.length){
+    table.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align:center;">
+          No advance payment receipts due today.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  table.innerHTML = dueAdvancePayments.map(p => {
+    const c = customers.find(x =>
+      String(x.id) === String(p.customerId)
+    ) || {};
+
+    return `
+      <tr>
+        <td>${c.accountNo || '-'}</td>
+        <td>${c.name || '-'}</td>
+        <td>${p.receiptNo || '-'}</td>
+        <td>₱${Number(p.amount || 0).toLocaleString()}</td>
+        <td>${p.advanceFor || '-'}</td>
+        <td>
+          <button class="secondary" onclick="showReceipt('${p.receiptNo}')">
+            View
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
 }
 function renderAll(){
   cleanupPaidActivationDuplicates();
