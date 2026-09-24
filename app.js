@@ -1673,8 +1673,8 @@ const finalPaymentTime = (() => {
 const isAdvancePayment = p.isAdvance === true || p.is_advance === true;
 
 const advanceForDate =
-  p.advanceForDate ||
-  p.advance_for_date ||
+  p.advanceFor ||
+  p.advance_for ||
   '';
 const createdDateTime =
   new Date().toLocaleString([], {
