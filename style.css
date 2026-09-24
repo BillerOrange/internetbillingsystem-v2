@@ -102,6 +102,10 @@ label{display:flex;flex-direction:column;gap:6px;font-size:14px}
     width:auto;
 min-width:max-content;
   }
+  #advanceReceiptNav{
+  grid-column:span 2;
+  width:100%;
+  }
   .main-content{
     padding:16px;
   }
