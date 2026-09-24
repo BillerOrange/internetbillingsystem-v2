@@ -1185,26 +1185,28 @@ balance: initialPaymentStatus === 'paid' ? 0 : fee,
     return;
   }
 
-  if(editingCustomerId && result.data?.[0]){
+  if(result.data?.[0]){
+    const savedCustomer = result.data[0];
+
     if(initialPaymentStatus === 'paid'){
-        await recordInitialActivationPayment(result.data[0], 'paid');
+        await recordInitialActivationPayment(savedCustomer, 'paid');
     } else {
-    const paymentKey = `ACTIVATION-PAID-${result.data[0].id}`;
+        const paymentKey = `ACTIVATION-PAID-${savedCustomer.id}`;
 
-    const { error: deletePaymentError } = await supabaseClient
-        .from('payments')
-        .delete()
-        .eq('client_id', result.data[0].id)
-        .eq('reference_no', paymentKey);
+        const { error: deletePaymentError } = await supabaseClient
+            .from('payments')
+            .delete()
+            .eq('client_id', savedCustomer.id)
+            .eq('reference_no', paymentKey);
 
-    if(deletePaymentError){
-        console.error('Error removing activation payment:', deletePaymentError);
-        alert('Error removing activation payment: ' + deletePaymentError.message);
-        return;
-    }
+        if(deletePaymentError){
+            console.error('Error removing activation payment:', deletePaymentError);
+            alert('Error removing activation payment: ' + deletePaymentError.message);
+            return;
+        }
 
-    payments = payments.filter(p => p.reference !== paymentKey);
-    ledgerEntries = ledgerEntries.filter(e => e.reference !== paymentKey);
+        payments = payments.filter(p => p.reference !== paymentKey);
+        ledgerEntries = ledgerEntries.filter(e => e.reference !== paymentKey);
     }
   }
 
