@@ -1671,7 +1671,10 @@ const finalPaymentTime = (() => {
       c.balance ??
       0
     );
-const isAdvancePayment = p.isAdvance === true || p.is_advance === true;
+const isAdvancePayment =
+  p.isAdvance === true ||
+  p.is_advance === true ||
+  Boolean(p.advanceFor || p.advance_for_date || p.advance_for);
 
 const advanceForDate =
   p.advanceFor ||
