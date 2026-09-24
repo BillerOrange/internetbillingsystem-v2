@@ -429,7 +429,49 @@
       </div>
     </div>
   </div>
+<div id="existingCustomerModal" class="modal hidden">
+  <div class="modal-box">
+    <div class="modal-title">
+      <h3>Add Existing Customer</h3>
+      <button id="closeExistingCustomerModal" class="icon-btn">×</button>
+    </div>
 
+    <div class="modal-grid">
+      <label>Full Name
+        <input id="existingCustomerName" type="text" />
+      </label>
+
+      <label>Address
+        <input id="existingCustomerAddress" type="text" />
+      </label>
+
+      <label>Contact No.
+        <input id="existingCustomerContact" type="text" />
+      </label>
+
+      <label>Internet Plan
+        <input id="existingCustomerPlan" type="text" placeholder="e.g. 50 Mbps" />
+      </label>
+
+      <label>Monthly Rate
+        <input id="existingCustomerFee" type="number" min="0" step="0.01" />
+      </label>
+
+      <label>Due Date
+        <input id="existingCustomerDue" type="date" />
+      </label>
+
+      <label>Existing Balance
+        <input id="existingCustomerBalance" type="number" min="0" step="0.01" value="0" />
+      </label>
+    </div>
+
+    <div class="modal-actions">
+      <button id="cancelExistingCustomerBtn" class="secondary">Cancel</button>
+      <button id="saveExistingCustomerBtn" class="primary">Save Existing Customer</button>
+    </div>
+  </div>
+</div>
   <div id="receiptModal" class="modal hidden">
     <div class="modal-box receipt-box">
       <div id="receiptContent"></div>
