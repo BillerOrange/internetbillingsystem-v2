@@ -1115,12 +1115,8 @@ $('saveCustomerBtn').addEventListener('click', async ()=>{
     monthly_rate: fee,
     activation_date: activationDate || null,
     due_date: dueDate || null,
-    current_bill: existingCustomer
-      ? Number(existingCustomer.currentBill || 0)
-      : (initialPaymentStatus === 'paid' ? 0 : fee),
-    balance: existingCustomer
-      ? Number(existingCustomer.balance || 0)
-      : (initialPaymentStatus === 'paid' ? 0 : fee),
+    current_bill: initialPaymentStatus === 'paid' ? 0 : fee,
+balance: initialPaymentStatus === 'paid' ? 0 : fee,
     is_active: true
   };
 
@@ -1145,8 +1141,15 @@ $('saveCustomerBtn').addEventListener('click', async ()=>{
     return;
   }
 
-  if(!editingCustomerId && initialPaymentStatus === 'paid' && result.data?.[0]){
-    recordInitialActivationPayment(result.data[0], 'paid');
+  if(editingCustomerId && result.data?.[0]){
+    if(initialPaymentStatus === 'paid'){
+        recordInitialActivationPayment(result.data[0], 'paid');
+    } else {
+        const paymentKey = `ACTIVATION-PAID-${result.data[0].id}`;
+
+        payments = payments.filter(p => p.reference !== paymentKey);
+        ledgerEntries = ledgerEntries.filter(e => e.reference !== paymentKey);
+    }
   }
 
   alert('Customer saved successfully.');
