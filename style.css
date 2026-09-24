@@ -462,3 +462,19 @@ label{display:flex;flex-direction:column;gap:6px;font-size:14px}
     padding:12px;
   }
 }
+/* Add Existing Customer - Gold Button */
+.gold-btn {
+  background: #D4AF37;
+  color: #111;
+  border: 1px solid #B8962E;
+  font-weight: 700;
+}
+
+.gold-btn:hover {
+  background: #E5C158;
+}
+
+.gold-btn:active {
+  background: #B8962E;
+  transform: translateY(1px);
+}
