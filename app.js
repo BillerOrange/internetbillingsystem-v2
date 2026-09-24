@@ -1914,3 +1914,22 @@ window.addEventListener('appinstalled', () => {
   document.getElementById('installGate')?.classList.add('hidden');
   document.getElementById('appShell')?.classList.remove('hidden');
 });
+function updateSystemDateTime() {
+  const display = document.getElementById('systemDateTime');
+  if (!display) return;
+
+  const now = new Date();
+
+  display.textContent = now.toLocaleString('en-PH', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: 'numeric',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  });
+}
+
+updateSystemDateTime();
+setInterval(updateSystemDateTime, 1000);
