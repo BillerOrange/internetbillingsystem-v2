@@ -1158,7 +1158,15 @@ function renderAdvanceReceipts(){
     p.isAdvance === true &&
     p.advanceFor === today
   );
+const advanceReceiptNav = document.getElementById('advanceReceiptNav');
 
+if(advanceReceiptNav){
+  advanceReceiptNav.classList.toggle(
+    'advance-due-blink',
+    dueAdvancePayments.length > 0 &&
+    !advanceReceiptNav.classList.contains('active')
+  );
+}
   if(!dueAdvancePayments.length){
     table.innerHTML = `
       <tr>
@@ -1860,9 +1868,12 @@ document.querySelectorAll('.nav-btn').forEach(btn=>{
   btn.addEventListener('click',()=>{
     document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
     document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+
     btn.classList.add('active');
     $(btn.dataset.section).classList.add('active');
     $('pageTitle').textContent = btn.textContent;
+
+    renderAdvanceReceipts();
   });
 });
 
