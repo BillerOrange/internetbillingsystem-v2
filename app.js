@@ -133,15 +133,17 @@ async function loadBillingAndPaymentsFromSupabase() {
   }
 
   payments = (paymentData || []).map((p, index) => ({
-    id: p.id,
-    customerId: p.client_id,
-    amount: Number(p.amount || 0),
-    date: String(p.payment_date || '').slice(0, 10),
-    reference: p.reference_no || '',
-    issuedBy: p.collected_by || '',
-    receiptNo: p.receipt_no || `OLD-RCPT-${String(index + 1).padStart(5,'0')}`,
-    balanceAfter: Number(p.balance_after || 0)
-  }));
+  id: p.id,
+  customerId: p.client_id,
+  amount: Number(p.amount || 0),
+  date: String(p.payment_date || '').slice(0, 10),
+  reference: p.reference_no || '',
+  issuedBy: p.collected_by || '',
+  receiptNo: p.receipt_no || `OLD-RCPT-${String(index + 1).padStart(5,'0')}`,
+  balanceAfter: Number(p.balance_after || 0),
+  isAdvance: p.is_advance === true,
+  advanceForDate: p.advance_for_date || ''
+}));
 
   const billingLedger = (billingData || []).map(b => ({
     id: b.id,
@@ -1668,7 +1670,12 @@ const finalPaymentTime = (() => {
       c.balance ??
       0
     );
+const isAdvancePayment = p.isAdvance === true || p.is_advance === true;
 
+const advanceForDate =
+  p.advanceForDate ||
+  p.advance_for_date ||
+  '';
 const createdDateTime =
   new Date().toLocaleString([], {
     year: 'numeric',
@@ -1694,6 +1701,10 @@ const createdDateTime =
       <div class="receipt-row"><span>Plan</span><strong>${finalPlan}</strong></div>
       <div class="receipt-row"><span>Reference</span><strong>${finalReference}</strong></div>
       <div class="receipt-row"><span>Payment Received By</span><strong>${finalIssuedBy}</strong></div>
+      ${isAdvancePayment ? `
+  <div class="receipt-row"><span>Payment Type</span><strong>ADVANCE PAYMENT</strong></div>
+  <div class="receipt-row"><span>For Due Date</span><strong>${advanceForDate}</strong></div>
+` : ''}
       <div class="receipt-row receipt-total"><span>Amount Paid</span><strong>${money(finalAmount)}</strong></div>
       <div class="receipt-row"><span>Remaining Balance</span><strong>${money(finalBalance)}</strong></div>
       <div class="receipt-row"><span>CDT</span><strong>${createdDateTime}</strong></div>
