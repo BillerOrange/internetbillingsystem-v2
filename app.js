@@ -410,24 +410,27 @@ function addMonthsClamped(date, months){
 function recordInitialActivationPayment(customer, status){
   if(!customer || status !== 'paid') return;
 
-  const amount = Number(customer.fee || 0);
+  const amount = Number(customer.monthly_rate ?? customer.fee ?? 0);
   if(amount <= 0) return;
 
-  const activationDate = customer.activationDate || todayISO();
+  const activationDate = customer.activation_date || customer.activationDate || todayISO();
   const paymentKey = `ACTIVATION-PAID-${customer.id}`;
 
-  const alreadyRecorded = payments.some(p => p.reference === paymentKey) ||
+  const alreadyRecorded =
+    payments.some(p => p.reference === paymentKey) ||
     ledgerEntries.some(e => e.reference === paymentKey);
+
   if(alreadyRecorded) return;
 
-  // The customer creation flow already creates the initial activation bill.
-  // Remove that separate ledger card and replace it with one combined
-  // "Activation Bill (Paid)" transaction.
+  // Remove the initial unpaid bill created during customer creation.
   const initialIndex = ledgerEntries.findIndex(e =>
-    e.customerId === customer.id &&
+    e.customerId == customer.id &&
     e.date === activationDate &&
     e.type === 'Bill' &&
-    (e.description === 'Initial monthly bill' || String(e.reference || '').startsWith('Due '))
+    (
+      e.description === 'Initial monthly bill' ||
+      String(e.reference || '').startsWith('Due ')
+    )
   );
 
   if(initialIndex >= 0){
@@ -440,6 +443,7 @@ function recordInitialActivationPayment(customer, status){
   customer.balance = Math.max(0, previousBalance - paymentAmount);
 
   const receiptNo = nextReceiptNo();
+
   payments.push({
     id: Date.now() + Math.random(),
     customerId: customer.id,
@@ -461,12 +465,12 @@ function recordInitialActivationPayment(customer, status){
     reference: paymentKey
   });
 
-  // Final safety cleanup: for a paid activation, there must never be a
-  // separate Initial monthly bill on the activation date.
+  // Remove any duplicate initial monthly bill for this activation date.
   for(let i = ledgerEntries.length - 1; i >= 0; i--){
     const e = ledgerEntries[i];
+
     if(
-      e.customerId === customer.id &&
+      e.customerId == customer.id &&
       e.date === activationDate &&
       e.type === 'Bill' &&
       e.description === 'Initial monthly bill'
@@ -1041,6 +1045,13 @@ function openCustomerModal(customer=null){
   $('customerFee').value = customer?.fee || '';
   $('activationDate').value = customer?.activationDate || todayISO();
   $('customerDue').value = customer?.dueDate || '';
+
+  if(customer){
+    $('initialPaymentStatus').value = Number(customer.balance || 0) <= 0 ? 'paid' : 'unpaid';
+  } else {
+    $('initialPaymentStatus').value = 'paid';
+  }
+
   $('customerModal').classList.remove('hidden');
 }
 
@@ -1099,25 +1110,34 @@ $('saveCustomerBtn').addEventListener('click', async ()=>{
   const fee = Number($('customerFee').value || 0);
   const activationDate = $('activationDate').value;
   const dueDate = $('customerDue').value;
+  const initialPaymentStatus = $('initialPaymentStatus').value;
 
   if(!accountNo || !name || !plan || fee <= 0){
     alert('Please complete Account No., Full Name, Internet Plan, and Monthly Rate.');
     return;
   }
 
+  const existingCustomer = editingCustomerId
+    ? customers.find(x => String(x.id) === String(editingCustomerId))
+    : null;
+
   const customerData = {
-  account_no: accountNo,
-  name: name,
-  address: address,
-  contact_no: contact,
-  internet_plan: plan,
-  monthly_rate: fee,
-  activation_date: activationDate || null,
-  due_date: dueDate || null,
-  current_bill: fee,
-  balance: fee,
-  is_active: true
-};
+    account_no: accountNo,
+    name: name,
+    address: address,
+    contact_no: contact,
+    internet_plan: plan,
+    monthly_rate: fee,
+    activation_date: activationDate || null,
+    due_date: dueDate || null,
+    current_bill: existingCustomer
+      ? Number(existingCustomer.currentBill || 0)
+      : (initialPaymentStatus === 'paid' ? 0 : fee),
+    balance: existingCustomer
+      ? Number(existingCustomer.balance || 0)
+      : (initialPaymentStatus === 'paid' ? 0 : fee),
+    is_active: true
+  };
 
   let result;
 
@@ -1140,11 +1160,15 @@ $('saveCustomerBtn').addEventListener('click', async ()=>{
     return;
   }
 
+  if(!editingCustomerId && initialPaymentStatus === 'paid' && result.data?.[0]){
+    recordInitialActivationPayment(result.data[0], 'paid');
+  }
+
   alert('Customer saved successfully.');
-  
+
   await loadCustomersFromSupabase();
-renderAll();
-  
+  renderAll();
+
   closeCustomerModal();
 });
 
