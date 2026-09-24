@@ -210,13 +210,16 @@
   <option value="">Search customer first</option>
 </select>
           </label>
-          <label>Amount Paid
-            <input id="paymentAmount" type="number" min="0" step="0.01" placeholder="0.00" />
-          </label>
-          <label style="display:flex; align-items:center; gap:8px;">
-  <input id="paymentIsAdvance" type="checkbox" />
-  Advance Payment
-          </label>
+          <label>
+  <span style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+    <span>Amount Paid</span>
+    <span style="display:flex; align-items:center; gap:6px; font-size:14px; white-space:nowrap;">
+      <input id="paymentIsAdvance" type="checkbox" style="width:auto; margin:0;" />
+      Advance Payment
+    </span>
+  </span>
+  <input id="paymentAmount" type="number" min="0" step="0.01" placeholder="0.00" />
+</label>
           <label>Payment Date</label>
 <input id="paymentDate" type="date" />
 
