@@ -1677,6 +1677,9 @@ const advanceForDate =
   p.advanceFor ||
   p.advance_for_date ||
   p.advance_for ||
+  payments.find(x =>
+    String(x.receiptNo) === String(finalReceiptNo)
+  )?.advanceFor ||
   '';
 const createdDateTime =
   new Date().toLocaleString([], {
