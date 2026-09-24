@@ -99,7 +99,8 @@ label{display:flex;flex-direction:column;gap:6px;font-size:14px}
     font-size:12px;
     border-radius:8px;
     white-space:nowrap;
-    width: max-content;
+    width:auto;
+min-width:max-content;
   }
   .main-content{
     padding:16px;
