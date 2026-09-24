@@ -137,6 +137,7 @@ async function loadBillingAndPaymentsFromSupabase() {
   customerId: p.client_id,
   amount: Number(p.amount || 0),
   date: String(p.payment_date || '').slice(0, 10),
+    paymentTime: p.payment_time || '',
   reference: p.reference_no || '',
   issuedBy: p.collected_by || '',
   receiptNo: p.receipt_no || `OLD-RCPT-${String(index + 1).padStart(5,'0')}`,
@@ -1692,8 +1693,10 @@ const createdDateTime =
       <div class="center">Internet Billing System</div>
       <div class="center">Official Payment Receipt</div>
       ${isAdvancePayment ? `
-<div class="center" style="font-weight:700; margin-top:8px;">ADVANCE PAYMENT</div>
-<div class="center">For Due Date: <strong>${advanceForDate}</strong></div>
+<div style="margin:8px 0 12px 0; text-align:left;">
+  <div><strong>ADVANCE PAYMENT</strong></div>
+  <div>For Due Date: <strong>${advanceForDate}</strong></div>
+</div>
 ` : ''}
       <br>
       <div class="receipt-row"><span>Receipt No.</span><strong>${finalReceiptNo}</strong></div>
