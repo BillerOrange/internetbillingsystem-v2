@@ -1286,7 +1286,13 @@ function openCustomerModal(customer = null) {
   $("customerFee").value = customer?.fee || "";
   $("activationDate").value = customer?.activationDate || todayISO();
   $("customerDue").value = customer?.dueDate || "";
-
+if (customer) {
+  $("customerBalance").value = Number(customer.balance || 0);
+  $("customerBalanceLabel").classList.remove("hidden");
+} else {
+  $("customerBalance").value = "";
+  $("customerBalanceLabel").classList.add("hidden");
+}
   if (customer) {
     $("initialPaymentStatus").value =
       Number(customer.balance || 0) <= 0 ? "paid" : "unpaid";
@@ -1454,8 +1460,13 @@ $("saveCustomerBtn").addEventListener("click", async () => {
     monthly_rate: fee,
     activation_date: activationDate || null,
     due_date: dueDate || null,
-    current_bill: initialPaymentStatus === "paid" ? 0 : fee,
-    balance: initialPaymentStatus === "paid" ? 0 : fee,
+    current_bill: editingCustomerId
+  ? Number(existingCustomer?.currentBill || 0)
+  : initialPaymentStatus === "paid" ? 0 : fee,
+
+balance: editingCustomerId
+  ? Number($("customerBalance").value || 0)
+  : initialPaymentStatus === "paid" ? 0 : fee,
     is_active: true,
   };
 
@@ -1480,7 +1491,7 @@ $("saveCustomerBtn").addEventListener("click", async () => {
     return;
   }
 
-  if (result.data?.[0]) {
+  if (!editingCustomerId && result.data?.[0]) {
     const savedCustomer = result.data[0];
 
     if (initialPaymentStatus === "paid") {
