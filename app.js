@@ -20,9 +20,6 @@ async function loginUser() {
   }
   await loadCustomersFromSupabase();
   await loadBillingAndPaymentsFromSupabase();
-  await runAutomaticMonthlyBilling();
-  await loadCustomersFromSupabase();
-  await loadBillingAndPaymentsFromSupabase();
   renderAll();
 
   document.getElementById("loginScreen").classList.add("hidden");
@@ -68,9 +65,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   } = await supabaseClient.auth.getSession();
 
   if (session) {
-    await loadCustomersFromSupabase();
-    await loadBillingAndPaymentsFromSupabase();
-    await runAutomaticMonthlyBilling();
     await loadCustomersFromSupabase();
     await loadBillingAndPaymentsFromSupabase();
     renderAll();
@@ -607,7 +601,7 @@ async function runAutomaticMonthlyBilling() {
             .select("id, receipt_no, payment_date, payment_time, collected_by")
             .eq("client_id", c.id)
             .eq("is_advance", true)
-            .eq("advance_for_date", cycleISO)
+            .eq("advance_for", cycleISO)
             .limit(1);
 
         if (advanceCheckError) {
@@ -1932,6 +1926,7 @@ document.querySelectorAll(".nav-btn").forEach((btn) => {
 });
 
 migrateExistingLedgerData();
+runAutomaticMonthlyBilling();
 cleanupPaidActivationDuplicates();
 saveData();
 renderAll();
