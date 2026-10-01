@@ -459,8 +459,12 @@
           </div>
         </label>
         <label>Billing Due Date
-          <input id="customerDue" type="date" />
-        </label>
+  <input id="customerDue" type="date" />
+</label>
+
+<label id="customerBalanceLabel" class="hidden">Outstanding Balance
+  <input id="customerBalance" type="number" min="0" step="0.01" />
+</label>
       </div>
 
       <div class="modal-actions">
