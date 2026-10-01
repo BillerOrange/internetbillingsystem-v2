@@ -1516,8 +1516,14 @@ $("saveExistingCustomerBtn").addEventListener("click", async () => {
   alert("Existing customer saved successfully.");
 
   await loadCustomersFromSupabase();
-  renderAll();
-  closeExistingCustomerModal();
+
+if (data && data[0]) {
+  await runBillingForEditedCustomer(data[0].id);
+  await loadCustomersFromSupabase();
+}
+
+renderAll();
+closeExistingCustomerModal();
 });
 $("saveCustomerBtn").addEventListener("click", async () => {
   const accountNo = $("accountNo").value.trim();
