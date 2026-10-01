@@ -694,7 +694,97 @@ async function runAutomaticMonthlyBilling() {
 
   saveData();
 }
+async function runBillingForEditedCustomer(customerId) {
+  const c = customers.find(
+    (x) => String(x.id) === String(customerId)
+  );
 
+  if (!c) return;
+  if (Number(c.fee || 0) <= 0) return;
+  if (!c.dueDate) return;
+
+  const today = parseLocalDate(todayISO());
+  const dueDate = parseLocalDate(c.dueDate);
+
+  if (!today || !dueDate) return;
+
+  // Future due date: do nothing.
+  // Example: Mandy - Oct 6 while today is Oct 1.
+  if (dueDate > today) return;
+
+  const dueISO = toISODateLocal(dueDate);
+
+  // Prevent duplicate billing for the same customer and due date.
+  const { data: existingBills, error: checkError } = await supabaseClient
+    .from("billing")
+    .select("id")
+    .eq("client_id", c.id)
+    .eq("due_date", dueISO)
+    .limit(1);
+
+  if (checkError) {
+    console.error("Error checking edited customer billing:", checkError);
+    return;
+  }
+
+  if (existingBills && existingBills.length > 0) {
+    return;
+  }
+
+  const previousBalance = Number(c.balance || 0);
+  const charge = Number(c.fee || 0);
+  const newBalance = previousBalance + charge;
+
+  const { error: billError } = await supabaseClient
+    .from("billing")
+    .insert([
+      {
+        client_id: c.id,
+        billing_month: dueISO,
+        previous_balance: previousBalance,
+        current_charge: charge,
+        due_date: dueISO,
+        status: "Unpaid",
+        description: "Automatic monthly internet bill",
+      },
+    ]);
+
+  if (billError) {
+    console.error("Error saving edited customer bill:", billError);
+    return;
+  }
+
+  const nextDueDate = toISODateLocal(
+    addMonthsClamped(dueDate, 1)
+  );
+
+  const { error: clientError } = await supabaseClient
+    .from("clients")
+    .update({
+      current_bill: charge,
+      balance: newBalance,
+      due_date: nextDueDate,
+    })
+    .eq("id", c.id);
+
+  if (clientError) {
+    console.error("Error updating edited customer balance:", clientError);
+
+    // Roll back the bill if customer update fails.
+    await supabaseClient
+      .from("billing")
+      .delete()
+      .eq("client_id", c.id)
+      .eq("due_date", dueISO)
+      .eq("description", "Automatic monthly internet bill");
+
+    return;
+  }
+
+  c.currentBill = charge;
+  c.balance = newBalance;
+  c.dueDate = nextDueDate;
+}
 function renderLedger() {
   const select = $("ledgerCustomer");
   if (!select) return;
@@ -1521,7 +1611,13 @@ balance: editingCustomerId
   alert("Customer saved successfully.");
 
   await loadCustomersFromSupabase();
-  renderAll();
+
+if (editingCustomerId) {
+  await runBillingForEditedCustomer(editingCustomerId);
+  await loadCustomersFromSupabase();
+}
+
+renderAll();
 
   closeCustomerModal();
 });
