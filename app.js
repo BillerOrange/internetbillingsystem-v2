@@ -1,83 +1,92 @@
-const SUPABASE_URL = 'https://nbluqgxgeqamcfpcntiv.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ibHVxZ3hnZXFhbWNmcGNudGl2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAxNDgzNzgsImV4cCI6MjEwNTcyNDM3OH0.SDLfZDOQCoD93Ssn8BoGEwyKoorT6ND2L3OKxY0aM0U';
+const SUPABASE_URL = "https://nbluqgxgeqamcfpcntiv.supabase.co";
+const SUPABASE_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ibHVxZ3hnZXFhbWNmcGNudGl2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAxNDgzNzgsImV4cCI6MjEwNTcyNDM3OH0.SDLfZDOQCoD93Ssn8BoGEwyKoorT6ND2L3OKxY0aM0U";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 async function loginUser() {
-  const email = document.getElementById('loginEmail').value.trim();
-  const password = document.getElementById('loginPassword').value;
-  const message = document.getElementById('loginMessage');
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  const message = document.getElementById("loginMessage");
 
-  message.textContent = 'Logging in...';
+  message.textContent = "Logging in...";
 
   const { data, error } = await supabaseClient.auth.signInWithPassword({
     email: email,
-    password: password
+    password: password,
   });
 
   if (error) {
-    message.textContent = 'Invalid email or password.';
+    message.textContent = "Invalid email or password.";
     return;
   }
-await loadCustomersFromSupabase();
-await loadBillingAndPaymentsFromSupabase();
-renderAll();
-  
-  document.getElementById('loginScreen').classList.add('hidden');
+  await loadCustomersFromSupabase();
+  await loadBillingAndPaymentsFromSupabase();
+  await runAutomaticMonthlyBilling();
+  await loadCustomersFromSupabase();
+  await loadBillingAndPaymentsFromSupabase();
+  renderAll();
 
-const isStandalone =
-    window.matchMedia('(display-mode: standalone)').matches ||
+  document.getElementById("loginScreen").classList.add("hidden");
+
+  const isStandalone =
+    window.matchMedia("(display-mode: standalone)").matches ||
     window.navigator.standalone === true;
 
-if (isStandalone) {
-    document.getElementById('installGate')?.classList.add('hidden');
-    document.getElementById('appShell')?.classList.remove('hidden');
-} else {
-    document.getElementById('appShell')?.classList.add('hidden');
-    document.getElementById('installGate')?.classList.remove('hidden');
-}
-  message.textContent = '';
+  if (isStandalone) {
+    document.getElementById("installGate")?.classList.add("hidden");
+    document.getElementById("appShell")?.classList.remove("hidden");
+  } else {
+    document.getElementById("appShell")?.classList.add("hidden");
+    document.getElementById("installGate")?.classList.remove("hidden");
+  }
+  message.textContent = "";
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
-  const loginBtn = document.getElementById('loginBtn');
+document.addEventListener("DOMContentLoaded", async () => {
+  const loginBtn = document.getElementById("loginBtn");
 
   if (loginBtn) {
-    loginBtn.addEventListener('click', loginUser);
+    loginBtn.addEventListener("click", loginUser);
   }
-  const logoutBtn = document.getElementById('logoutBtn');
+  const logoutBtn = document.getElementById("logoutBtn");
 
-if (logoutBtn) {
-    logoutBtn.addEventListener('click', async () => {
-      alert('LOGOUT BUTTON WORKING');
-        const { error } = await supabaseClient.auth.signOut();
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", async () => {
+      alert("LOGOUT BUTTON WORKING");
+      const { error } = await supabaseClient.auth.signOut();
 
-        if (error) {
-            alert('Logout failed: ' + error.message);
-            return;
-        }
+      if (error) {
+        alert("Logout failed: " + error.message);
+        return;
+      }
 
-        window.location.reload();
+      window.location.reload();
     });
-}
+  }
 
-  const { data: { session } } = await supabaseClient.auth.getSession();
+  const {
+    data: { session },
+  } = await supabaseClient.auth.getSession();
 
   if (session) {
     await loadCustomersFromSupabase();
     await loadBillingAndPaymentsFromSupabase();
+    await runAutomaticMonthlyBilling();
+    await loadCustomersFromSupabase();
+    await loadBillingAndPaymentsFromSupabase();
     renderAll();
 
-    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById("loginScreen").classList.add("hidden");
 
     const isStandalone =
-        window.matchMedia('(display-mode: standalone)').matches ||
-        window.navigator.standalone === true;
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.navigator.standalone === true;
 
     if (isStandalone) {
-        document.getElementById('installGate')?.classList.add('hidden');
-        document.getElementById('appShell')?.classList.remove('hidden');
+      document.getElementById("installGate")?.classList.add("hidden");
+      document.getElementById("appShell")?.classList.remove("hidden");
     } else {
-        document.getElementById('appShell')?.classList.add('hidden');
-        document.getElementById('installGate')?.classList.remove('hidden');
+      document.getElementById("appShell")?.classList.add("hidden");
+      document.getElementById("installGate")?.classList.remove("hidden");
     }
   }
 });
@@ -85,285 +94,281 @@ if (logoutBtn) {
 const seedCustomers = [
   {
     id: 1,
-    accountNo: 'NB-0001',
-    name: 'Juan Dela Cruz',
-    address: 'Sample Address',
-    contact: '09170000001',
-    plan: '50 Mbps',
+    accountNo: "NB-0001",
+    name: "Juan Dela Cruz",
+    address: "Sample Address",
+    contact: "09170000001",
+    plan: "50 Mbps",
     fee: 999,
-    activationDate: '2026-08-01',
-    dueDate: '2026-08-15',
+    activationDate: "2026-08-01",
+    dueDate: "2026-08-15",
     currentBill: 999,
-    balance: 999
+    balance: 999,
   },
   {
     id: 2,
-    accountNo: 'NB-0002',
-    name: 'Maria Santos',
-    address: 'Sample Address',
-    contact: '09170000002',
-    plan: '100 Mbps',
+    accountNo: "NB-0002",
+    name: "Maria Santos",
+    address: "Sample Address",
+    contact: "09170000002",
+    plan: "100 Mbps",
     fee: 1499,
-    activationDate: '2026-08-01',
-    dueDate: '2026-08-10',
+    activationDate: "2026-08-01",
+    dueDate: "2026-08-10",
     currentBill: 1499,
-    balance: 0
-  }
+    balance: 0,
+  },
 ];
 
 let customers = [];
-let payments = JSON.parse(localStorage.getItem('nb_payments') || '[]');
+let payments = JSON.parse(localStorage.getItem("nb_payments") || "[]");
 async function loadBillingAndPaymentsFromSupabase() {
   const { data: billingData, error: billingError } = await supabaseClient
-    .from('billing')
-    .select('*')
-    .order('created_at', { ascending: true });
+    .from("billing")
+    .select("*")
+    .order("created_at", { ascending: true });
 
   if (billingError) {
-    console.error('Error loading billing:', billingError);
+    console.error("Error loading billing:", billingError);
   }
 
   const { data: paymentData, error: paymentError } = await supabaseClient
-    .from('payments')
-    .select('*')
-    .order('created_at', { ascending: true });
+    .from("payments")
+    .select("*")
+    .order("created_at", { ascending: true });
 
   if (paymentError) {
-    console.error('Error loading payments:', paymentError);
+    console.error("Error loading payments:", paymentError);
   }
 
   payments = (paymentData || []).map((p, index) => ({
-  id: p.id,
-  customerId: p.client_id,
-  amount: Number(p.amount || 0),
-  date: String(p.payment_date || '').slice(0, 10),
-    paymentTime: p.payment_time || '',
-  reference: p.reference_no || '',
-  issuedBy: p.collected_by || '',
-  receiptNo: p.receipt_no || `OLD-RCPT-${String(index + 1).padStart(5,'0')}`,
-  balanceAfter: Number(p.balance_after || 0),
-  isAdvance: p.is_advance === true,
-  advanceFor: p.advance_for_date || ''
-}));
+    id: p.id,
+    customerId: p.client_id,
+    amount: Number(p.amount || 0),
+    date: String(p.payment_date || "").slice(0, 10),
+    paymentTime: p.payment_time || "",
+    reference: p.reference_no || "",
+    issuedBy: p.collected_by || "",
+    receiptNo: p.receipt_no || `OLD-RCPT-${String(index + 1).padStart(5, "0")}`,
+    balanceAfter: Number(p.balance_after || 0),
+    isAdvance: p.is_advance === true,
+    advanceFor: p.advance_for_date || "",
+  }));
 
-  const billingLedger = (billingData || []).map(b => ({
+  const billingLedger = (billingData || []).map((b) => ({
     id: b.id,
     customerId: b.client_id,
-    date: String(b.billing_month || b.created_at || '').slice(0, 10),
-    type: 'Bill',
-    description: b.description || 'Monthly internet bill',
+    date: String(b.billing_month || b.created_at || "").slice(0, 10),
+    type: "Bill",
+    description: b.description || "Monthly internet bill",
     previousBalance: Number(b.previous_balance || 0),
     charge: Number(b.current_charge || 0),
     payment: 0,
-    runningBalance: Number(b.previous_balance || 0) + Number(b.current_charge || 0),
-    reference: b.due_date ? `Due ${b.due_date}` : ''
+    runningBalance:
+      Number(b.previous_balance || 0) + Number(b.current_charge || 0),
+    reference: b.due_date ? `Due ${b.due_date}` : "",
   }));
 
-  const paymentLedger = (paymentData || []).map(p => ({
+  const paymentLedger = (paymentData || []).map((p) => ({
     id: p.id,
     customerId: p.client_id,
-    date: String(p.payment_date || p.created_at || '').slice(0, 10),
-    type: 'Payment',
-    description: `Payment ${p.receipt_no || p.reference_no || ''}`.trim(),
+    date: String(p.payment_date || p.created_at || "").slice(0, 10),
+    type: "Payment",
+    description: `Payment ${p.receipt_no || p.reference_no || ""}`.trim(),
     previousBalance: Number(p.balance_before || 0),
     charge: 0,
     payment: Number(p.amount || 0),
     runningBalance: Number(p.balance_after || 0),
-    reference: p.reference_no || ''
+    reference: p.reference_no || "",
   }));
 
   ledgerEntries = [...billingLedger, ...paymentLedger];
 }
-let ledgerEntries = JSON.parse(localStorage.getItem('nb_ledger') || '[]');
+let ledgerEntries = JSON.parse(localStorage.getItem("nb_ledger") || "[]");
 let editingCustomerId = null;
 async function loadCustomersFromSupabase() {
   const { data, error } = await supabaseClient
-    .from('clients')
-    .select('*')
-    .order('created_at', { ascending: true });
+    .from("clients")
+    .select("*")
+    .order("created_at", { ascending: true });
 
   if (error) {
-    console.error('Error loading customers:', error);
+    console.error("Error loading customers:", error);
     return;
   }
 
-  customers = (data || []).map(c => ({
-  id: c.id,
-  accountNo: c.account_no,
-  name: c.name,
-  address: c.address || '',
-  contact: c.contact_no || '',
-  plan: c.internet_plan || '',
-  fee: Number(c.monthly_rate || 0),
-  activationDate: c.activation_date || '',
-  dueDate: c.due_date || '',
-  currentBill: Number(c.current_bill || 0),
-  balance: Number(c.balance || 0)
-}));
+  customers = (data || []).map((c) => ({
+    id: c.id,
+    accountNo: c.account_no,
+    name: c.name,
+    address: c.address || "",
+    contact: c.contact_no || "",
+    plan: c.internet_plan || "",
+    fee: Number(c.monthly_rate || 0),
+    activationDate: c.activation_date || "",
+    dueDate: c.due_date || "",
+    currentBill: Number(c.current_bill || 0),
+    balance: Number(c.balance || 0),
+  }));
 }
-const $ = id => document.getElementById(id);
-const todayISO = () => new Date().toISOString().slice(0,10);
-const money = value => '₱' + Number(value || 0).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2});
+const $ = (id) => document.getElementById(id);
+const todayISO = () => new Date().toISOString().slice(0, 10);
+const money = (value) =>
+  "₱" +
+  Number(value || 0).toLocaleString("en-PH", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
-function saveData(){
-  localStorage.setItem('nb_customers', JSON.stringify(customers));
-  localStorage.setItem('nb_payments', JSON.stringify(payments));
-  localStorage.setItem('nb_ledger', JSON.stringify(ledgerEntries));
+function saveData() {
+  localStorage.setItem("nb_customers", JSON.stringify(customers));
+  localStorage.setItem("nb_payments", JSON.stringify(payments));
+  localStorage.setItem("nb_ledger", JSON.stringify(ledgerEntries));
 }
 
-function getStatus(c){
-  if(Number(c.balance) <= 0) return 'Paid';
-  if(c.dueDate && c.dueDate < todayISO()) return 'Overdue';
-  return 'Unpaid';
+function getStatus(c) {
+  if (Number(c.balance) <= 0) return "Paid";
+  if (c.dueDate && c.dueDate < todayISO()) return "Overdue";
+  return "Unpaid";
 }
 
-function statusBadge(status){
+function statusBadge(status) {
   return `<span class="status ${status.toLowerCase()}">${status}</span>`;
 }
 
-function nextAccountNo(){
-  const nums = customers.map(c => Number(String(c.accountNo || '').replace(/\D/g,'')) || 0);
+function nextAccountNo() {
+  const nums = customers.map(
+    (c) => Number(String(c.accountNo || "").replace(/\D/g, "")) || 0
+  );
   const next = Math.max(0, ...nums) + 1;
-  return 'NB-' + String(next).padStart(4,'0');
+  return "NB-" + String(next).padStart(4, "0");
 }
-async function nextReceiptNo(){
-  const { data } = await supabaseClient
-    .from('payments')
-    .select('receipt_no');
+async function nextReceiptNo() {
+  const { data } = await supabaseClient.from("payments").select("receipt_no");
 
   const numbers = (data || [])
-    .map(p => Number(String(p.receipt_no || '').replace('RCPT-', '')))
-    .filter(n => !isNaN(n));
+    .map((p) => Number(String(p.receipt_no || "").replace("RCPT-", "")))
+    .filter((n) => !isNaN(n));
 
   const next = numbers.length ? Math.max(...numbers) + 1 : 1;
 
-  return 'RCPT-' + String(next).padStart(5,'0');
+  return "RCPT-" + String(next).padStart(5, "0");
 }
 
-function renderDashboard(){
-  const totalCollected = payments.reduce((sum,p)=>sum + Number(p.amount || 0),0);
-  const outstanding = customers.reduce((sum,c)=>sum + Math.max(0,Number(c.balance || 0)),0);
+function renderDashboard() {
+  const totalCollected = payments.reduce(
+    (sum, p) => sum + Number(p.amount || 0),
+    0
+  );
+  const outstanding = customers.reduce(
+    (sum, c) => sum + Math.max(0, Number(c.balance || 0)),
+    0
+  );
 
-  $('totalCustomers').textContent = customers.length;
-  $('activeCustomers').textContent = customers.length;
-  $('unpaidCustomers').textContent = customers.filter(c => getStatus(c) !== 'Paid').length;
-  $('totalCollected').textContent = money(totalCollected);
-  $('outstandingBalance').textContent = money(outstanding);
+  $("totalCustomers").textContent = customers.length;
+  $("activeCustomers").textContent = customers.length;
+  $("unpaidCustomers").textContent = customers.filter(
+    (c) => getStatus(c) !== "Paid"
+  ).length;
+  $("totalCollected").textContent = money(totalCollected);
+  $("outstandingBalance").textContent = money(outstanding);
 
-  $('recentCustomerTable').innerHTML = customers.slice(-5).reverse().map(c => `
-    <tr>
-      <td>${c.accountNo}</td>
-      <td>${c.name}</td>
-      <td>${c.plan}</td>
-      <td>${money(c.balance)}</td>
-      <td>${statusBadge(getStatus(c))}</td>
-    </tr>
-  `).join('') || `<tr><td colspan="5">No customer records yet.</td></tr>`;
+  $("recentCustomerTable").innerHTML =
+    customers
+      .slice(-5)
+      .reverse()
+      .map(
+        (c) => ` <tr> <td>${c.accountNo}</td> <td>${c.name}</td> <td>${c.plan}</td> <td>${money(c.balance)}</td> <td>${statusBadge(getStatus(c))}</td> </tr> `
+      )
+      .join("") || `<tr><td colspan="5">No customer records yet.</td></tr>`;
 }
 
-function renderCustomers(){
-  const q = ($('customerSearch').value || '').toLowerCase().trim();
-  const f = $('statusFilter').value;
-  const filtered = customers.filter(c => {
-    const matchesSearch = !q || c.name.toLowerCase().includes(q) || String(c.accountNo).toLowerCase().includes(q);
+function renderCustomers() {
+  const q = ($("customerSearch").value || "").toLowerCase().trim();
+  const f = $("statusFilter").value;
+  const filtered = customers.filter((c) => {
+    const matchesSearch =
+      !q ||
+      c.name.toLowerCase().includes(q) ||
+      String(c.accountNo).toLowerCase().includes(q);
     const matchesStatus = !f || getStatus(c) === f;
     return matchesSearch && matchesStatus;
   });
 
-  $('customerTable').innerHTML = filtered.map(c => `
-    <tr>
-      <td>${c.accountNo}</td>
-      <td><strong>${c.name}</strong><br><small>${c.address || ''}</small></td>
-      <td>${c.contact || '-'}</td>
-      <td>${c.plan}</td>
-      <td>${money(c.fee)}</td>
-      <td>${c.dueDate || '-'}</td>
-      <td>${money(c.balance)}</td>
-      <td>${statusBadge(getStatus(c))}</td>
-      <td>
-        <div class="action-group">
-          <button class="small-btn" onclick="editCustomer('${c.id}')">Edit</button>
-<button class="small-btn danger" onclick="deleteCustomer('${c.id}')">Delete</button>
-        </div>
-      </td>
-    </tr>
-  `).join('') || `<tr><td colspan="9">No matching customers.</td></tr>`;
+  $("customerTable").innerHTML =
+    filtered
+      .map(
+        (c) => ` <tr> <td>${c.accountNo}</td> <td><strong>${c.name}</strong><br><small>${c.address || ""}</small></td> <td>${c.contact || "-"}</td> <td>${c.plan}</td> <td>${money(c.fee)}</td> <td>${c.dueDate || "-"}</td> <td>${money(c.balance)}</td> <td>${statusBadge(getStatus(c))}</td> <td> <div class="action-group"> <button class="small-btn" onclick="editCustomer('${ c.id }')">Edit</button> <button class="small-btn danger" onclick="deleteCustomer('${ c.id }')">Delete</button> </div> </td> </tr> `
+      )
+      .join("") || `<tr><td colspan="9">No matching customers.</td></tr>`;
 }
 
-function renderBilling(){
-  $('billingTable').innerHTML = customers.map(c => `
-    <tr>
-      <td>${c.accountNo}</td>
-      <td>${c.name}</td>
-      <td>${money(c.currentBill || 0)}</td>
-      <td>${money(c.balance || 0)}</td>
-      <td>${c.dueDate || '-'}</td>
-      <td>${statusBadge(getStatus(c))}</td>
-    </tr>
-  `).join('') || `<tr><td colspan="6">No customer records yet.</td></tr>`;
+function renderBilling() {
+  $("billingTable").innerHTML =
+    customers
+      .map(
+        (c) => ` <tr> <td>${c.accountNo}</td> <td>${c.name}</td> <td>${money(c.currentBill || 0)}</td> <td>${money(c.balance || 0)}</td> <td>${c.dueDate || "-"}</td> <td>${statusBadge(getStatus(c))}</td> </tr> `
+      )
+      .join("") || `<tr><td colspan="6">No customer records yet.</td></tr>`;
 }
 
-function renderPayments(){
-  $('paymentTable').innerHTML = payments.slice().reverse().map(p => {
-    const c = customers.find(x => x.id === p.customerId);
-    return `
-      <tr>
-        <td>${p.date}</td>
-        <td>${p.receiptNo}</td>
-        <td>${c ? c.name : p.customerName}</td>
-        <td>${money(p.amount)}</td>
-        <td>${p.reference || '-'}</td>
-        <td>${p.issuedBy || '-'}</td>
-        <td>${money(p.balanceAfter)}</td>
-        <td><button class="small-btn" onclick="showReceipt('${p.receiptNo}')">View</button></td>
-      </tr>
-    `;
-  }).join('') || `<tr><td colspan="8">No payments recorded yet.</td></tr>`;
+function renderPayments() {
+  $("paymentTable").innerHTML =
+    payments
+      .slice()
+      .reverse()
+      .map((p) => {
+        const c = customers.find((x) => x.id === p.customerId);
+        return ` <tr> <td>${p.date}</td> <td>${p.receiptNo}</td> <td>${c ? c.name : p.customerName}</td> <td>${money(p.amount)}</td> <td>${p.reference || "-"}</td> <td>${p.issuedBy || "-"}</td> <td>${money(p.balanceAfter)}</td> <td><button class="small-btn" onclick="showReceipt('${ p.receiptNo }')">View</button></td> </tr> `;
+      })
+      .join("") || `<tr><td colspan="8">No payments recorded yet.</td></tr>`;
 }
 
-
-function addLedgerEntry(entry){
+function addLedgerEntry(entry) {
   ledgerEntries.push({
-    id: Date.now() + Math.floor(Math.random()*1000),
-    ...entry
+    id: Date.now() + Math.floor(Math.random() * 1000),
+    ...entry,
   });
 }
 
+function migrateExistingLedgerData() {
+  if (localStorage.getItem("nb_ledger_migrated_v6") === "1") return;
 
-function migrateExistingLedgerData(){
-  if(localStorage.getItem('nb_ledger_migrated_v6') === '1') return;
-
-  customers.forEach(c => {
-    const existing = ledgerEntries.filter(e => e.customerId === c.id);
-    if(existing.length) return;
+  customers.forEach((c) => {
+    const existing = ledgerEntries.filter((e) => e.customerId === c.id);
+    if (existing.length) return;
 
     const customerPayments = payments
-      .filter(p => p.customerId === c.id)
-      .sort((a,b) => String(a.date).localeCompare(String(b.date)));
+      .filter((p) => p.customerId === c.id)
+      .sort((a, b) => String(a.date).localeCompare(String(b.date)));
 
-    const totalPaid = customerPayments.reduce((sum,p) => sum + Number(p.amount || 0), 0);
+    const totalPaid = customerPayments.reduce(
+      (sum, p) => sum + Number(p.amount || 0),
+      0
+    );
     const currentBalance = Number(c.balance || 0);
 
     // Reconstruct the opening billed amount from current balance + recorded payments.
     const reconstructedBill = currentBalance + totalPaid;
 
-    if(reconstructedBill > 0){
+    if (reconstructedBill > 0) {
       let running = reconstructedBill;
-      const openingDate = c.activationDate || customerPayments[0]?.date || todayISO();
+      const openingDate =
+        c.activationDate || customerPayments[0]?.date || todayISO();
 
       addLedgerEntry({
         customerId: c.id,
         date: openingDate,
-        type: 'Bill',
-        description: 'Existing account balance (migrated)',
+        type: "Bill",
+        description: "Existing account balance (migrated)",
         previousBalance: 0,
         charge: reconstructedBill,
         payment: 0,
         runningBalance: reconstructedBill,
-        reference: c.dueDate ? `Due ${c.dueDate}` : 'Migrated'
+        reference: c.dueDate ? `Due ${c.dueDate}` : "Migrated",
       });
 
-      customerPayments.forEach(p => {
+      customerPayments.forEach((p) => {
         const previousBalance = running;
         const paid = Number(p.amount || 0);
         running = Math.max(0, running - paid);
@@ -371,291 +376,305 @@ function migrateExistingLedgerData(){
         addLedgerEntry({
           customerId: c.id,
           date: p.date || todayISO(),
-          type: 'Payment',
-          description: `Payment ${p.receiptNo || ''}`.trim(),
+          type: "Payment",
+          description: `Payment ${p.receiptNo || ""}`.trim(),
           previousBalance,
           charge: 0,
           payment: paid,
           runningBalance: running,
-          reference: p.reference || p.receiptNo || 'Migrated'
+          reference: p.reference || p.receiptNo || "Migrated",
         });
       });
     }
   });
 
-  localStorage.setItem('nb_ledger_migrated_v6', '1');
+  localStorage.setItem("nb_ledger_migrated_v6", "1");
   saveData();
 }
 
-
-function parseLocalDate(iso){
-  if(!iso) return null;
-  const [y,m,d] = iso.split('-').map(Number);
-  return new Date(y, m-1, d);
+function parseLocalDate(iso) {
+  if (!iso) return null;
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d);
 }
 
-function toISODateLocal(date){
+function toISODateLocal(date) {
   const y = date.getFullYear();
-  const m = String(date.getMonth()+1).padStart(2,'0');
-  const d = String(date.getDate()).padStart(2,'0');
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
 }
 
-function addMonthsClamped(date, months){
+function addMonthsClamped(date, months) {
   const originalDay = date.getDate();
   const target = new Date(date.getFullYear(), date.getMonth() + months, 1);
-  const lastDay = new Date(target.getFullYear(), target.getMonth()+1, 0).getDate();
+  const lastDay = new Date(
+    target.getFullYear(),
+    target.getMonth() + 1,
+    0
+  ).getDate();
   target.setDate(Math.min(originalDay, lastDay));
   return target;
 }
 
+async function recordInitialActivationPayment(customer, status) {
+  if (!customer || status !== "paid") return;
 
-async function recordInitialActivationPayment(customer, status){
-    if(!customer || status !== 'paid') return;
+  const amount = Number(customer.monthly_rate ?? customer.fee ?? 0);
+  if (amount <= 0) return;
 
-    const amount = Number(customer.monthly_rate ?? customer.fee ?? 0);
-    if(amount <= 0) return;
+  const activationDate =
+    customer.activation_date || customer.activationDate || todayISO();
 
-    const activationDate =
-        customer.activation_date ||
-        customer.activationDate ||
-        todayISO();
+  const paymentKey = `ACTIVATION-PAID-${customer.id}`;
 
-    const paymentKey = `ACTIVATION-PAID-${customer.id}`;
+  // Check Supabase first so the activation payment is not duplicated.
+  const { data: existingPayments, error: checkError } = await supabaseClient
+    .from("payments")
+    .select("id, reference_no")
+    .eq("client_id", customer.id)
+    .eq("reference_no", paymentKey);
 
-    // Check Supabase first so the activation payment is not duplicated.
-    const { data: existingPayments, error: checkError } = await supabaseClient
-        .from('payments')
-        .select('id, reference_no')
-        .eq('client_id', customer.id)
-        .eq('reference_no', paymentKey);
+  if (checkError) {
+    console.error("Error checking activation payment:", checkError);
+    alert("Error checking activation payment: " + checkError.message);
+    return;
+  }
 
-    if(checkError){
-        console.error('Error checking activation payment:', checkError);
-        alert('Error checking activation payment: ' + checkError.message);
-        return;
-    }
+  if (existingPayments && existingPayments.length > 0) {
+    return;
+  }
 
-    if(existingPayments && existingPayments.length > 0){
-        return;
-    }
+  const receiptNo = nextReceiptNo();
 
-    const receiptNo = nextReceiptNo();
-
-    // Save the activation payment permanently in Supabase.
-    const { data: savedPayment, error: paymentError } = await supabaseClient
-        .from('payments')
-        .insert([{
-            billing_id: null,
-            client_id: customer.id,
-            amount: amount,
-            payment_date: activationDate,
-            payment_time: new Date().toTimeString().slice(0,5),
-            payment_method: 'Cash',
-            receipt_no: receiptNo,
-            reference_no: paymentKey,
-            notes: 'Activation payment',
-            collector_email: '',
-            collected_by: 'Activation',
-            balance_before: amount,
-            balance_after: 0
-        }])
-        .select()
-        .single();
-
-    if(paymentError){
-        console.error('Error saving activation payment:', paymentError);
-        alert('Error saving activation payment: ' + paymentError.message);
-        return;
-    }
-
-    payments.push({
-        id: savedPayment.id,
-        customerId: customer.id,
-        customerName: customer.name,
-        accountNo: customer.account_no,
-        date: activationDate,
+  // Save the activation payment permanently in Supabase.
+  const { data: savedPayment, error: paymentError } = await supabaseClient
+    .from("payments")
+    .insert([
+      {
+        billing_id: null,
+        client_id: customer.id,
         amount: amount,
-        reference: paymentKey,
-        receiptNo: receiptNo,
-        issuedBy: 'Activation',
-        balanceAfter: 0
-    });
+        payment_date: activationDate,
+        payment_time: new Date().toTimeString().slice(0, 5),
+        payment_method: "Cash",
+        receipt_no: receiptNo,
+        reference_no: paymentKey,
+        notes: "Activation payment",
+        collector_email: "",
+        collected_by: "Activation",
+        balance_before: amount,
+        balance_after: 0,
+      },
+    ])
+    .select()
+    .single();
 
-    addLedgerEntry({
-        customerId: customer.id,
-        date: activationDate,
-        type: 'Activation Bill (Paid)',
-        description: 'Activation monthly bill paid upon activation',
-        previousBalance: 0,
-        charge: amount,
-        payment: amount,
-        runningBalance: 0,
-        reference: paymentKey
-    });
+  if (paymentError) {
+    console.error("Error saving activation payment:", paymentError);
+    alert("Error saving activation payment: " + paymentError.message);
+    return;
+  }
 
-    customer.currentBill = 0;
-    customer.balance = 0;
+  payments.push({
+    id: savedPayment.id,
+    customerId: customer.id,
+    customerName: customer.name,
+    accountNo: customer.account_no,
+    date: activationDate,
+    amount: amount,
+    reference: paymentKey,
+    receiptNo: receiptNo,
+    issuedBy: "Activation",
+    balanceAfter: 0,
+  });
 
-    // Remove the local unpaid initial bill, if present.
-    for(let i = ledgerEntries.length - 1; i >= 0; i--){
-        const e = ledgerEntries[i];
+  addLedgerEntry({
+    customerId: customer.id,
+    date: activationDate,
+    type: "Activation Bill (Paid)",
+    description: "Activation monthly bill paid upon activation",
+    previousBalance: 0,
+    charge: amount,
+    payment: amount,
+    runningBalance: 0,
+    reference: paymentKey,
+  });
 
-        if(
-            e.customerId == customer.id &&
-            e.date === activationDate &&
-            e.type === 'Bill' &&
-            e.description === 'Initial monthly bill'
-        ){
-            ledgerEntries.splice(i, 1);
-        }
-    }
-}
+  customer.currentBill = 0;
+  customer.balance = 0;
 
-
-function cleanupPaidActivationDuplicates(){
-  const paidKeys = new Set(
-    ledgerEntries
-      .filter(e =>
-        String(e.type || '').toLowerCase().includes('activation') &&
-        String(e.type || '').toLowerCase().includes('paid')
-      )
-      .map(e => `${e.customerId}|${e.date}`)
-  );
-
-  for(let i = ledgerEntries.length - 1; i >= 0; i--){
+  // Remove the local unpaid initial bill, if present.
+  for (let i = ledgerEntries.length - 1; i >= 0; i--) {
     const e = ledgerEntries[i];
-    const key = `${e.customerId}|${e.date}`;
-    const desc = String(e.description || '').trim().toLowerCase();
-    const type = String(e.type || '').trim().toLowerCase();
 
-    if(
-      paidKeys.has(key) &&
-      type === 'bill' &&
-      (desc === 'initial monthly bill' || desc.includes('initial monthly'))
-    ){
+    if (
+      e.customerId == customer.id &&
+      e.date === activationDate &&
+      e.type === "Bill" &&
+      e.description === "Initial monthly bill"
+    ) {
       ledgerEntries.splice(i, 1);
     }
   }
 }
 
-async function runAutomaticMonthlyBilling(){
-  const today = parseLocalDate(todayISO());
-  if(!today) return;
+function cleanupPaidActivationDuplicates() {
+  const paidKeys = new Set(
+    ledgerEntries
+      .filter(
+        (e) =>
+          String(e.type || "")
+            .toLowerCase()
+            .includes("activation") &&
+          String(e.type || "")
+            .toLowerCase()
+            .includes("paid")
+      )
+      .map((e) => `${e.customerId}|${e.date}`)
+  );
 
-  for(const c of customers){
-    if(Number(c.fee || 0) <= 0) continue;
+  for (let i = ledgerEntries.length - 1; i >= 0; i--) {
+    const e = ledgerEntries[i];
+    const key = `${e.customerId}|${e.date}`;
+    const desc = String(e.description || "")
+      .trim()
+      .toLowerCase();
+    const type = String(e.type || "")
+      .trim()
+      .toLowerCase();
+
+    if (
+      paidKeys.has(key) &&
+      type === "bill" &&
+      (desc === "initial monthly bill" || desc.includes("initial monthly"))
+    ) {
+      ledgerEntries.splice(i, 1);
+    }
+  }
+}
+
+async function runAutomaticMonthlyBilling() {
+  const today = parseLocalDate(todayISO());
+  if (!today) return;
+
+  for (const c of customers) {
+    if (Number(c.fee || 0) <= 0) continue;
 
     let cycleDate;
 
-    if(c.activationDate){
+    if (c.activationDate) {
       // Normal/new customer:
       // first recurring bill is one month after activation.
       const activation = parseLocalDate(c.activationDate);
-      if(!activation) continue;
+      if (!activation) continue;
 
       cycleDate = addMonthsClamped(activation, 1);
     } else {
       // Existing customer:
       // entered Due Date is the first recurring billing date.
       cycleDate = parseLocalDate(c.dueDate);
-      if(!cycleDate) continue;
+      if (!cycleDate) continue;
     }
 
     let safety = 0;
 
-    while(cycleDate <= today && safety < 240){
+    while (cycleDate <= today && safety < 240) {
       const cycleISO = toISODateLocal(cycleDate);
       const cycleKey = `AUTO-${c.id}-${cycleISO}`;
 
       // Check Supabase first to prevent duplicate monthly billing.
       const { data: existingBills, error: checkError } = await supabaseClient
-        .from('billing')
-        .select('id')
-        .eq('client_id', c.id)
-        .eq('due_date', cycleISO);
+        .from("billing")
+        .select("id")
+        .eq("client_id", c.id)
+        .eq("due_date", cycleISO);
 
-      if(checkError){
-        console.error('Error checking automatic bill:', checkError);
+      if (checkError) {
+        console.error("Error checking automatic bill:", checkError);
         cycleDate = addMonthsClamped(cycleDate, 1);
         safety++;
         continue;
       }
 
-      if(!existingBills || existingBills.length === 0){
+      if (!existingBills || existingBills.length === 0) {
         const previousBalance = Number(c.balance || 0);
         const charge = Number(c.fee || 0);
         const newBalance = previousBalance + charge;
-const { data: advancePayments, error: advanceCheckError } = await supabaseClient
-  .from('payments')
-  .select('id, receipt_no, payment_date, payment_time, collected_by')
-  .eq('client_id', c.id)
-  .eq('is_advance', true)
-  .eq('advance_for', cycleISO)
-  .limit(1);
+        const { data: advancePayments, error: advanceCheckError } =
+          await supabaseClient
+            .from("payments")
+            .select("id, receipt_no, payment_date, payment_time, collected_by")
+            .eq("client_id", c.id)
+            .eq("is_advance", true)
+            .eq("advance_for_date", cycleISO)
+            .limit(1);
 
-if(advanceCheckError){
-  console.error('Error checking advance payment:', advanceCheckError);
-  cycleDate = addMonthsClamped(cycleDate, 1);
-  safety++;
-  continue;
-}
+        if (advanceCheckError) {
+          console.error("Error checking advance payment:", advanceCheckError);
+          cycleDate = addMonthsClamped(cycleDate, 1);
+          safety++;
+          continue;
+        }
 
-const advancePayment =
-  advancePayments && advancePayments.length > 0
-    ? advancePayments[0]
-    : null;
-        
-        const finalBalance = advancePayment
-  ? previousBalance
-  : newBalance;
+        const advancePayment =
+          advancePayments && advancePayments.length > 0
+            ? advancePayments[0]
+            : null;
+
+        const finalBalance = advancePayment ? previousBalance : newBalance;
         const { error: billError } = await supabaseClient
-          .from('billing')
-          .insert([{
-            client_id: c.id,
-            billing_month: cycleISO,
-            previous_balance: previousBalance,
-            current_charge: charge,
-            due_date: cycleISO,
-            status: advancePayment ? 'Paid' : 'Unpaid',
-            description: 'Automatic monthly internet bill'
-          }]);
+          .from("billing")
+          .insert([
+            {
+              client_id: c.id,
+              billing_month: cycleISO,
+              previous_balance: previousBalance,
+              current_charge: charge,
+              due_date: cycleISO,
+              status: advancePayment ? "Paid" : "Unpaid",
+              description: "Automatic monthly internet bill",
+            },
+          ]);
 
-        if(billError){
-          console.error('Error saving automatic bill:', billError);
+        if (billError) {
+          console.error("Error saving automatic bill:", billError);
           cycleDate = addMonthsClamped(cycleDate, 1);
           safety++;
           continue;
         }
 
         const { error: clientError } = await supabaseClient
-  .from('clients')
-  .update({
-    current_bill: charge,
-    balance: finalBalance,
-    due_date: cycleISO
-  })
-  .eq('id', c.id);
+          .from("clients")
+          .update({
+            current_bill: charge,
+            balance: finalBalance,
+            due_date: cycleISO,
+          })
+          .eq("id", c.id);
 
-if(clientError){
-  console.error('Error updating automatic customer balance:', clientError);
+        if (clientError) {
+          console.error(
+            "Error updating automatic customer balance:",
+            clientError
+          );
 
-  // Remove the bill that was just created so it can safely retry next time.
-  const { error: rollbackError } = await supabaseClient
-    .from('billing')
-    .delete()
-    .eq('client_id', c.id)
-    .eq('due_date', cycleISO)
-    .eq('description', 'Automatic monthly internet bill');
+          // Remove the bill that was just created so it can safely retry next time.
+          const { error: rollbackError } = await supabaseClient
+            .from("billing")
+            .delete()
+            .eq("client_id", c.id)
+            .eq("due_date", cycleISO)
+            .eq("description", "Automatic monthly internet bill");
 
-  if(rollbackError){
-    console.error('Error rolling back automatic bill:', rollbackError);
-  }
+          if (rollbackError) {
+            console.error("Error rolling back automatic bill:", rollbackError);
+          }
 
-  cycleDate = addMonthsClamped(cycleDate, 1);
-  safety++;
-  continue;
-}
+          cycleDate = addMonthsClamped(cycleDate, 1);
+          safety++;
+          continue;
+        }
 
         c.currentBill = charge;
         c.balance = finalBalance;
@@ -664,13 +683,13 @@ if(clientError){
         addLedgerEntry({
           customerId: c.id,
           date: cycleISO,
-          type: 'Bill',
-          description: 'Automatic monthly internet bill',
+          type: "Bill",
+          description: "Automatic monthly internet bill",
           previousBalance,
           charge,
           payment: 0,
           runningBalance: finalBalance,
-          reference: cycleKey
+          reference: cycleKey,
         });
       }
 
@@ -682,524 +701,571 @@ if(clientError){
   saveData();
 }
 
-function renderLedger(){
-  const select = $('ledgerCustomer');
-  if(!select) return;
-  const customerId = select.value || customers[0]?.id || '';
-  const c = customers.find(x => String(x.id) === String(customerId));
+function renderLedger() {
+  const select = $("ledgerCustomer");
+  if (!select) return;
+  const customerId = select.value || customers[0]?.id || "";
+  const c = customers.find((x) => String(x.id) === String(customerId));
 
-  if(!c){
-    $('ledgerName').textContent = '-';
-    $('ledgerAccount').textContent = '-';
-    $('ledgerBalance').textContent = money(0);
-    $('ledgerTable').innerHTML = `<tr><td colspan="8">No customer selected.</td></tr>`;
+  if (!c) {
+    $("ledgerName").textContent = "-";
+    $("ledgerAccount").textContent = "-";
+    $("ledgerBalance").textContent = money(0);
+    $(
+      "ledgerTable"
+    ).innerHTML = `<tr><td colspan="8">No customer selected.</td></tr>`;
     return;
   }
 
-  $('ledgerName').textContent = c.name;
-  $('ledgerAccount').textContent = c.accountNo;
-  $('ledgerBalance').textContent = money(c.balance);
+  $("ledgerName").textContent = c.name;
+  $("ledgerAccount").textContent = c.accountNo;
+  $("ledgerBalance").textContent = money(c.balance);
 
   const entries = ledgerEntries
-    .filter(e=>e.customerId===c.id)
-.sort((a,b)=> String(a.date).localeCompare(String(b.date)));
+    .filter((e) => e.customerId === c.id)
+    .sort((a, b) => String(a.date).localeCompare(String(b.date)));
 
-  $('ledgerTable').innerHTML = entries.map(e=>`
-    <tr>
-      <td>${e.date}</td>
-      <td>${e.type}</td>
-      <td>${e.description || '-'}</td>
-      <td>${money(e.previousBalance)}</td>
-      <td>${e.charge ? money(e.charge) : '-'}</td>
-      <td>${e.payment ? money(e.payment) : '-'}</td>
-      <td>${money(e.runningBalance)}</td>
-      <td>${e.reference || '-'}</td>
-    </tr>
-  `).join('') || `<tr><td colspan="8">No ledger transactions yet.</td></tr>`;
+  $("ledgerTable").innerHTML =
+    entries
+      .map(
+        (e) => ` <tr> <td>${e.date}</td> <td>${e.type}</td> <td>${e.description || "-"}</td> <td>${money(e.previousBalance)}</td> <td>${e.charge ? money(e.charge) : "-"}</td> <td>${e.payment ? money(e.payment) : "-"}</td> <td>${money(e.runningBalance)}</td> <td>${e.reference || "-"}</td> </tr> `
+      )
+      .join("") || `<tr><td colspan="8">No ledger transactions yet.</td></tr>`;
 }
 
-
-
-function getPaymentYear(p){
-  return String(p.date || '').slice(0,4);
+function getPaymentYear(p) {
+  return String(p.date || "").slice(0, 4);
 }
 
 const COLLECTION_MONTHS = [
-  ['01','January'],['02','February'],['03','March'],['04','April'],
-  ['05','May'],['06','June'],['07','July'],['08','August'],
-  ['09','September'],['10','October'],['11','November'],['12','December']
+  ["01", "January"],
+  ["02", "February"],
+  ["03", "March"],
+  ["04", "April"],
+  ["05", "May"],
+  ["06", "June"],
+  ["07", "July"],
+  ["08", "August"],
+  ["09", "September"],
+  ["10", "October"],
+  ["11", "November"],
+  ["12", "December"],
 ];
 
-function renderCollectionYearOptions(){
-  const select = $('collectionYearFilter');
-  if(!select) return;
+function renderCollectionYearOptions() {
+  const select = $("collectionYearFilter");
+  if (!select) return;
 
-  const years = [...new Set(
-    payments.map(getPaymentYear).filter(y => /^\d{4}$/.test(y))
-  )];
+  const years = [
+    ...new Set(payments.map(getPaymentYear).filter((y) => /^\d{4}$/.test(y))),
+  ];
 
   const currentYear = String(new Date().getFullYear());
-  if(!years.includes(currentYear)) years.push(currentYear);
-  years.sort((a,b)=>Number(b)-Number(a));
+  if (!years.includes(currentYear)) years.push(currentYear);
+  years.sort((a, b) => Number(b) - Number(a));
 
   const previous = select.value;
-  select.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
-  if(previous && years.includes(previous)) select.value = previous;
+  select.innerHTML = years
+    .map((y) => `<option value="${y}">${y}</option>`)
+    .join("");
+  if (previous && years.includes(previous)) select.value = previous;
   else select.value = currentYear;
 }
 
-function getSelectedCollectionPayments(){
-  const type = $('collectionReportType')?.value || 'monthly';
-  const year = $('collectionYearFilter')?.value || String(new Date().getFullYear());
-  const month = $('collectionMonthFilter')?.value || String(new Date().getMonth()+1).padStart(2,'0');
+function getSelectedCollectionPayments() {
+  const type = $("collectionReportType")?.value || "monthly";
+  const year =
+    $("collectionYearFilter")?.value || String(new Date().getFullYear());
+  const month =
+    $("collectionMonthFilter")?.value ||
+    String(new Date().getMonth() + 1).padStart(2, "0");
 
-  if(type === 'monthly'){
-    return payments.filter(p => String(p.date || '').startsWith(`${year}-${month}`));
+  if (type === "monthly") {
+    return payments.filter((p) =>
+      String(p.date || "").startsWith(`${year}-${month}`)
+    );
   }
-  return payments.filter(p => String(p.date || '').startsWith(`${year}-`));
+  return payments.filter((p) => String(p.date || "").startsWith(`${year}-`));
 }
 
-function renderCollectionReport(){
-  const type = $('collectionReportType')?.value || 'monthly';
-  const year = $('collectionYearFilter')?.value || String(new Date().getFullYear());
-  const month = $('collectionMonthFilter')?.value || '01';
-  const monthName = COLLECTION_MONTHS.find(([m])=>m===month)?.[1] || month;
-  const table = $('monthlyCollectionTable');
-  const head = $('collectionTableHead');
-  const summary = $('collectionReportSummary');
-  const monthLabel = $('collectionMonthLabel');
+function renderCollectionReport() {
+  const type = $("collectionReportType")?.value || "monthly";
+  const year =
+    $("collectionYearFilter")?.value || String(new Date().getFullYear());
+  const month = $("collectionMonthFilter")?.value || "01";
+  const monthName = COLLECTION_MONTHS.find(([m]) => m === month)?.[1] || month;
+  const table = $("monthlyCollectionTable");
+  const head = $("collectionTableHead");
+  const summary = $("collectionReportSummary");
+  const monthLabel = $("collectionMonthLabel");
 
-  if(!table || !head || !summary) return;
+  if (!table || !head || !summary) return;
 
-  if(monthLabel) monthLabel.style.display = type === 'monthly' ? '' : 'none';
+  if (monthLabel) monthLabel.style.display = type === "monthly" ? "" : "none";
 
-  if(type === 'monthly'){
-    const matched = getSelectedCollectionPayments().slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));
-    const total = matched.reduce((sum,p)=>sum + Number(p.amount || 0),0);
+  if (type === "monthly") {
+    const matched = getSelectedCollectionPayments()
+      .slice()
+      .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+    const total = matched.reduce((sum, p) => sum + Number(p.amount || 0), 0);
 
-    summary.innerHTML = `
-      <div class="summary-item"><span>Period</span><strong>${monthName} ${year}</strong></div>
-      <div class="summary-item"><span>No. of Payments</span><strong>${matched.length}</strong></div>
-      <div class="summary-item"><span>Total Collected</span><strong>${money(total)}</strong></div>
-    `;
+    summary.innerHTML = ` <div class="summary-item"><span>Period</span><strong>${monthName} ${year}</strong></div> <div class="summary-item"><span>No. of Payments</span><strong>${ matched.length }</strong></div> <div class="summary-item"><span>Total Collected</span><strong>${money( total )}</strong></div> `;
 
-    head.innerHTML = `
-      <tr>
-        <th>Date</th>
-        <th>Receipt No.</th>
-        <th>Customer</th>
-        <th>Account No.</th>
-        <th>Reference</th>
-        <th>Amount Paid</th>
-        <th>Outstanding Balance</th>
-        <th>Collected By</th>
-      </tr>
-    `;
+    head.innerHTML = ` <tr> <th>Date</th> <th>Receipt No.</th> <th>Customer</th> <th>Account No.</th> <th>Reference</th> <th>Amount Paid</th> <th>Outstanding Balance</th> <th>Collected By</th> </tr> `;
 
-    table.innerHTML = matched.map(p => `
-      <tr>
-        <td>${p.date || '-'}</td>
-        <td>${p.receiptNo || '-'}</td>
-        <td>${p.customerName || customers.find(c=>c.id===p.customerId)?.name || '-'}</td>
-        <td>${p.accountNo || customers.find(c=>c.id===p.customerId)?.accountNo || '-'}</td>
-        <td>${p.reference || '-'}</td>
-        <td>${money(p.amount)}</td>
-        <td>${money(p.balanceAfter)}</td>
-        <td>${p.issuedBy || '-'}</td>
-      </tr>
-    `).join('') || `<tr><td colspan="8">No payments for ${monthName} ${year}.</td></tr>`;
+    table.innerHTML =
+      matched
+        .map(
+          (p) => ` <tr> <td>${p.date || "-"}</td> <td>${p.receiptNo || "-"}</td> <td>${ p.customerName || customers.find((c) => c.id === p.customerId)?.name || "-" }</td> <td>${ p.accountNo || customers.find((c) => c.id === p.customerId)?.accountNo || "-" }</td> <td>${p.reference || "-"}</td> <td>${money(p.amount)}</td> <td>${money(p.balanceAfter)}</td> <td>${p.issuedBy || "-"}</td> </tr> `
+        )
+        .join("") ||
+      `<tr><td colspan="8">No payments for ${monthName} ${year}.</td></tr>`;
   } else {
-    const rows = COLLECTION_MONTHS.map(([m,name]) => {
-      const matched = payments.filter(p => String(p.date || '').startsWith(`${year}-${m}`));
+    const rows = COLLECTION_MONTHS.map(([m, name]) => {
+      const matched = payments.filter((p) =>
+        String(p.date || "").startsWith(`${year}-${m}`)
+      );
       return {
-        month:name,
-        count:matched.length,
-        total:matched.reduce((sum,p)=>sum + Number(p.amount || 0),0)
+        month: name,
+        count: matched.length,
+        total: matched.reduce((sum, p) => sum + Number(p.amount || 0), 0),
       };
     });
-    const yearPayments = rows.reduce((s,r)=>s+r.count,0);
-    const yearTotal = rows.reduce((s,r)=>s+r.total,0);
+    const yearPayments = rows.reduce((s, r) => s + r.count, 0);
+    const yearTotal = rows.reduce((s, r) => s + r.total, 0);
 
-    summary.innerHTML = `
-      <div class="summary-item"><span>Year</span><strong>${year}</strong></div>
-      <div class="summary-item"><span>No. of Payments</span><strong>${yearPayments}</strong></div>
-      <div class="summary-item"><span>Total Collected</span><strong>${money(yearTotal)}</strong></div>
-    `;
+    summary.innerHTML = ` <div class="summary-item"><span>Year</span><strong>${year}</strong></div> <div class="summary-item"><span>No. of Payments</span><strong>${yearPayments}</strong></div> <div class="summary-item"><span>Total Collected</span><strong>${money( yearTotal )}</strong></div> `;
 
-    head.innerHTML = `
-      <tr>
-        <th>Month</th>
-        <th>No. of Payments</th>
-        <th>Total Collected</th>
-      </tr>
-    `;
+    head.innerHTML = ` <tr> <th>Month</th> <th>No. of Payments</th> <th>Total Collected</th> </tr> `;
 
-    table.innerHTML = rows.map(r => `
-      <tr>
-        <td>${r.month} ${year}</td>
-        <td>${r.count}</td>
-        <td>${money(r.total)}</td>
-      </tr>
-    `).join('');
+    table.innerHTML = rows
+      .map(
+        (r) => ` <tr> <td>${r.month} ${year}</td> <td>${r.count}</td> <td>${money(r.total)}</td> </tr> `
+      )
+      .join("");
   }
 }
 
-function csvEscape(value){
-  return `"${String(value ?? '').replace(/"/g,'""')}"`;
+function csvEscape(value) {
+  return `"${String(value ?? "").replace(/"/g, '""')}"`;
 }
 
-function setCellStyle(cell, style){
-  if(cell) cell.s = style;
+function setCellStyle(cell, style) {
+  if (cell) cell.s = style;
 }
 
-function downloadCollectionExcel(){
-  if(typeof XLSX === 'undefined'){
-    alert('Excel exporter is still loading. Please check your internet connection and try again.');
+function downloadCollectionExcel() {
+  if (typeof XLSX === "undefined") {
+    alert(
+      "Excel exporter is still loading. Please check your internet connection and try again."
+    );
     return;
   }
 
-  const type = $('collectionReportType')?.value || 'monthly';
-  const year = $('collectionYearFilter')?.value || String(new Date().getFullYear());
-  const month = $('collectionMonthFilter')?.value || '01';
-  const monthName = COLLECTION_MONTHS.find(([m])=>m===month)?.[1] || month;
+  const type = $("collectionReportType")?.value || "monthly";
+  const year =
+    $("collectionYearFilter")?.value || String(new Date().getFullYear());
+  const month = $("collectionMonthFilter")?.value || "01";
+  const monthName = COLLECTION_MONTHS.find(([m]) => m === month)?.[1] || month;
   const wb = XLSX.utils.book_new();
 
-  function formatMoneyColumn(ws, colIndex){
-    if(!ws['!ref']) return;
-    const range = XLSX.utils.decode_range(ws['!ref']);
-    for(let r=0;r<=range.e.r;r++){
-      const cell = ws[XLSX.utils.encode_cell({r,c:colIndex})];
-      if(cell && typeof cell.v === 'number') cell.z='₱#,##0.00';
+  function formatMoneyColumn(ws, colIndex) {
+    if (!ws["!ref"]) return;
+    const range = XLSX.utils.decode_range(ws["!ref"]);
+    for (let r = 0; r <= range.e.r; r++) {
+      const cell = ws[XLSX.utils.encode_cell({ r, c: colIndex })];
+      if (cell && typeof cell.v === "number") cell.z = "₱#,##0.00";
     }
   }
 
-  function addOutstandingSheet(){
+  function addOutstandingSheet() {
     const outstanding = customers
-      .filter(c=>Number(c.balance || 0) > 0)
+      .filter((c) => Number(c.balance || 0) > 0)
       .slice()
-      .sort((a,b)=>Number(b.balance||0)-Number(a.balance||0));
+      .sort((a, b) => Number(b.balance || 0) - Number(a.balance || 0));
 
     const rows = [
-      ['NETBILL - CURRENT OUTSTANDING BALANCES','','','',''],
-      ['Generated', new Date().toLocaleString(),'','',''],
+      ["NETBILL - CURRENT OUTSTANDING BALANCES", "", "", "", ""],
+      ["Generated", new Date().toLocaleString(), "", "", ""],
       [],
-      ['Account No.','Client','Status','Due Date','Outstanding Balance']
+      ["Account No.", "Client", "Status", "Due Date", "Outstanding Balance"],
     ];
 
-    outstanding.forEach(c=>{
+    outstanding.forEach((c) => {
       rows.push([
-        String(c.accountNo || ''),
-        String(c.name || ''),
-        String(getStatus(c) || ''),
-        String(c.dueDate || ''),
-        Number(c.balance || 0)
+        String(c.accountNo || ""),
+        String(c.name || ""),
+        String(getStatus(c) || ""),
+        String(c.dueDate || ""),
+        Number(c.balance || 0),
       ]);
     });
 
-    const total = outstanding.reduce((s,c)=>s+Number(c.balance||0),0);
+    const total = outstanding.reduce((s, c) => s + Number(c.balance || 0), 0);
     rows.push([]);
-    rows.push(['TOTAL OUTSTANDING','','','',total]);
+    rows.push(["TOTAL OUTSTANDING", "", "", "", total]);
 
     const ws = XLSX.utils.aoa_to_sheet(rows);
-    ws['!cols'] = [{wch:18},{wch:30},{wch:16},{wch:16},{wch:22}];
-    formatMoneyColumn(ws,4);
-    XLSX.utils.book_append_sheet(wb,ws,'Outstanding Balances');
+    ws["!cols"] = [
+      { wch: 18 },
+      { wch: 30 },
+      { wch: 16 },
+      { wch: 16 },
+      { wch: 22 },
+    ];
+    formatMoneyColumn(ws, 4);
+    XLSX.utils.book_append_sheet(wb, ws, "Outstanding Balances");
   }
 
-  function addCollectorSummary(sourcePayments, sheetName, periodLabel){
+  function addCollectorSummary(sourcePayments, sheetName, periodLabel) {
     const collectors = {};
-    sourcePayments.forEach(p=>{
-      const name = String(p.issuedBy || 'Unspecified').trim() || 'Unspecified';
-      if(!collectors[name]) collectors[name]={count:0,total:0};
+    sourcePayments.forEach((p) => {
+      const name = String(p.issuedBy || "Unspecified").trim() || "Unspecified";
+      if (!collectors[name]) collectors[name] = { count: 0, total: 0 };
       collectors[name].count += 1;
-      collectors[name].total += Number(p.amount||0);
+      collectors[name].total += Number(p.amount || 0);
     });
 
     const rows = [
-      ['NETBILL - COLLECTOR SUMMARY','',''],
-      ['Period',periodLabel,''],
+      ["NETBILL - COLLECTOR SUMMARY", "", ""],
+      ["Period", periodLabel, ""],
       [],
-      ['Collected By','No. of Payments','Total Collected']
+      ["Collected By", "No. of Payments", "Total Collected"],
     ];
 
     Object.entries(collectors)
-      .sort((a,b)=>b[1].total-a[1].total)
-      .forEach(([name,v])=>rows.push([name,v.count,v.total]));
+      .sort((a, b) => b[1].total - a[1].total)
+      .forEach(([name, v]) => rows.push([name, v.count, v.total]));
 
     rows.push([]);
     rows.push([
-      'TOTAL',
+      "TOTAL",
       sourcePayments.length,
-      sourcePayments.reduce((s,p)=>s+Number(p.amount||0),0)
+      sourcePayments.reduce((s, p) => s + Number(p.amount || 0), 0),
     ]);
 
     const ws = XLSX.utils.aoa_to_sheet(rows);
-    ws['!cols']=[{wch:30},{wch:18},{wch:20}];
-    formatMoneyColumn(ws,2);
-    XLSX.utils.book_append_sheet(wb,ws,sheetName);
+    ws["!cols"] = [{ wch: 30 }, { wch: 18 }, { wch: 20 }];
+    formatMoneyColumn(ws, 2);
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
   }
 
-  if(type === 'monthly'){
-    const matched = getSelectedCollectionPayments().slice()
-      .sort((a,b)=>String(a.date).localeCompare(String(b.date)));
-    const total = matched.reduce((s,p)=>s+Number(p.amount||0),0);
+  if (type === "monthly") {
+    const matched = getSelectedCollectionPayments()
+      .slice()
+      .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+    const total = matched.reduce((s, p) => s + Number(p.amount || 0), 0);
 
     const rows = [
-      ['NETBILL - MONTHLY COLLECTION REPORT','','','','','','',''],
-      ['Internet Billing System | Powered by CM Philippines','','','','','','',''],
+      ["NETBILL - MONTHLY COLLECTION REPORT", "", "", "", "", "", "", ""],
+      [
+        "Internet Billing System | Powered by CM Philippines",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+      ],
       [],
-      ['Period',`${monthName} ${year}`,'','','','','',''],
-      ['No. of Payments',matched.length,'','','','','',''],
+      ["Period", `${monthName} ${year}`, "", "", "", "", "", ""],
+      ["No. of Payments", matched.length, "", "", "", "", "", ""],
       [],
-      ['Date','Receipt No.','Client','Account No.','Reference','Amount Paid','Outstanding Balance','Collected By']
+      [
+        "Date",
+        "Receipt No.",
+        "Client",
+        "Account No.",
+        "Reference",
+        "Amount Paid",
+        "Outstanding Balance",
+        "Collected By",
+      ],
     ];
 
-    matched.forEach(p=>{
-      const c = customers.find(x=>x.id===p.customerId);
+    matched.forEach((p) => {
+      const c = customers.find((x) => x.id === p.customerId);
       rows.push([
-        String(p.date||''),
-        String(p.receiptNo||''),
-        String(p.customerName||c?.name||''),
-        String(p.accountNo||c?.accountNo||''),
-        String(p.reference||''),
-        Number(p.amount||0),
-        Number(p.balanceAfter||0),
-        String(p.issuedBy||'-')
+        String(p.date || ""),
+        String(p.receiptNo || ""),
+        String(p.customerName || c?.name || ""),
+        String(p.accountNo || c?.accountNo || ""),
+        String(p.reference || ""),
+        Number(p.amount || 0),
+        Number(p.balanceAfter || 0),
+        String(p.issuedBy || "-"),
       ]);
     });
 
     rows.push([]);
-    rows.push(['TOTAL COLLECTED','','','','',total,'','']);
+    rows.push(["TOTAL COLLECTED", "", "", "", "", total, "", ""]);
 
     const ws = XLSX.utils.aoa_to_sheet(rows);
-    ws['!merges']=[
-      {s:{r:0,c:0},e:{r:0,c:7}},
-      {s:{r:1,c:0},e:{r:1,c:7}},
-      {s:{r:3,c:1},e:{r:3,c:7}},
-      {s:{r:4,c:1},e:{r:4,c:7}},
-      {s:{r:rows.length-1,c:0},e:{r:rows.length-1,c:4}}
+    ws["!merges"] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 7 } },
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 7 } },
+      { s: { r: 3, c: 1 }, e: { r: 3, c: 7 } },
+      { s: { r: 4, c: 1 }, e: { r: 4, c: 7 } },
+      { s: { r: rows.length - 1, c: 0 }, e: { r: rows.length - 1, c: 4 } },
     ];
-    ws['!cols']=[
-      {wch:15},{wch:18},{wch:28},{wch:18},
-      {wch:28},{wch:17},{wch:22},{wch:24}
+    ws["!cols"] = [
+      { wch: 15 },
+      { wch: 18 },
+      { wch: 28 },
+      { wch: 18 },
+      { wch: 28 },
+      { wch: 17 },
+      { wch: 22 },
+      { wch: 24 },
     ];
-    ws['!freeze']={xSplit:0,ySplit:7,topLeftCell:'A8',activePane:'bottomLeft',state:'frozen'};
-    formatMoneyColumn(ws,5);
-    formatMoneyColumn(ws,6);
-    XLSX.utils.book_append_sheet(wb,ws,`${monthName} ${year}`);
+    ws["!freeze"] = {
+      xSplit: 0,
+      ySplit: 7,
+      topLeftCell: "A8",
+      activePane: "bottomLeft",
+      state: "frozen",
+    };
+    formatMoneyColumn(ws, 5);
+    formatMoneyColumn(ws, 6);
+    XLSX.utils.book_append_sheet(wb, ws, `${monthName} ${year}`);
 
-    addCollectorSummary(matched,'Collector Audit',`${monthName} ${year}`);
+    addCollectorSummary(matched, "Collector Audit", `${monthName} ${year}`);
     addOutstandingSheet();
 
-    wb.Props={
-      Title:`NetBill Monthly Collection Report - ${monthName} ${year}`,
-      Subject:'Complete Collection, Outstanding Balance, and Collector Audit Report',
-      Author:'NetBill - CM Philippines',
-      Company:'CM Philippines'
+    wb.Props = {
+      Title: `NetBill Monthly Collection Report - ${monthName} ${year}`,
+      Subject:
+        "Complete Collection, Outstanding Balance, and Collector Audit Report",
+      Author: "NetBill - CM Philippines",
+      Company: "CM Philippines",
     };
-    XLSX.writeFile(wb,`NetBill_Monthly_Report_${year}-${month}.xlsx`,{
-      bookType:'xlsx',compression:true,cellStyles:true
+    XLSX.writeFile(wb, `NetBill_Monthly_Report_${year}-${month}.xlsx`, {
+      bookType: "xlsx",
+      compression: true,
+      cellStyles: true,
     });
-
   } else {
     const yearPayments = payments
-      .filter(p=>String(p.date||'').startsWith(`${year}-`))
+      .filter((p) => String(p.date || "").startsWith(`${year}-`))
       .slice()
-      .sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+      .sort((a, b) => String(a.date).localeCompare(String(b.date)));
 
-    const monthlyRows = COLLECTION_MONTHS.map(([m,name])=>{
-      const matched = yearPayments.filter(p=>String(p.date||'').startsWith(`${year}-${m}`));
-      return [name,matched.length,matched.reduce((s,p)=>s+Number(p.amount||0),0)];
+    const monthlyRows = COLLECTION_MONTHS.map(([m, name]) => {
+      const matched = yearPayments.filter((p) =>
+        String(p.date || "").startsWith(`${year}-${m}`)
+      );
+      return [
+        name,
+        matched.length,
+        matched.reduce((s, p) => s + Number(p.amount || 0), 0),
+      ];
     });
 
-    const totalPayments=yearPayments.length;
-    const totalCollected=yearPayments.reduce((s,p)=>s+Number(p.amount||0),0);
+    const totalPayments = yearPayments.length;
+    const totalCollected = yearPayments.reduce(
+      (s, p) => s + Number(p.amount || 0),
+      0
+    );
 
-    const summary=[
-      ['NETBILL - YEARLY COLLECTION REPORT','',''],
-      ['Internet Billing System | Powered by CM Philippines','',''],
+    const summary = [
+      ["NETBILL - YEARLY COLLECTION REPORT", "", ""],
+      ["Internet Billing System | Powered by CM Philippines", "", ""],
       [],
-      ['Year',year,''],
+      ["Year", year, ""],
       [],
-      ['Month','No. of Payments','Total Collected']
+      ["Month", "No. of Payments", "Total Collected"],
     ];
-    monthlyRows.forEach(r=>summary.push([`${r[0]} ${year}`,r[1],r[2]]));
+    monthlyRows.forEach((r) => summary.push([`${r[0]} ${year}`, r[1], r[2]]));
     summary.push([]);
-    summary.push(['TOTAL PAYMENTS','',totalPayments]);
-    summary.push(['TOTAL COLLECTED','',totalCollected]);
+    summary.push(["TOTAL PAYMENTS", "", totalPayments]);
+    summary.push(["TOTAL COLLECTED", "", totalCollected]);
 
-    const sws=XLSX.utils.aoa_to_sheet(summary);
-    sws['!cols']=[{wch:24},{wch:20},{wch:20}];
-    formatMoneyColumn(sws,2);
-    XLSX.utils.book_append_sheet(wb,sws,`Year ${year}`);
+    const sws = XLSX.utils.aoa_to_sheet(summary);
+    sws["!cols"] = [{ wch: 24 }, { wch: 20 }, { wch: 20 }];
+    formatMoneyColumn(sws, 2);
+    XLSX.utils.book_append_sheet(wb, sws, `Year ${year}`);
 
     // Full transaction-level yearly audit with balance after every payment.
-    const detail=[
-      ['NETBILL - YEARLY PAYMENT AUDIT','','','','','','',''],
-      ['Date','Receipt No.','Client','Account No.','Reference','Amount Paid','Outstanding Balance','Collected By']
+    const detail = [
+      ["NETBILL - YEARLY PAYMENT AUDIT", "", "", "", "", "", "", ""],
+      [
+        "Date",
+        "Receipt No.",
+        "Client",
+        "Account No.",
+        "Reference",
+        "Amount Paid",
+        "Outstanding Balance",
+        "Collected By",
+      ],
     ];
 
-    yearPayments.forEach(p=>{
-      const c=customers.find(x=>x.id===p.customerId);
+    yearPayments.forEach((p) => {
+      const c = customers.find((x) => x.id === p.customerId);
       detail.push([
-        String(p.date||''),
-        String(p.receiptNo||''),
-        String(p.customerName||c?.name||''),
-        String(p.accountNo||c?.accountNo||''),
-        String(p.reference||''),
-        Number(p.amount||0),
-        Number(p.balanceAfter||0),
-        String(p.issuedBy||'-')
+        String(p.date || ""),
+        String(p.receiptNo || ""),
+        String(p.customerName || c?.name || ""),
+        String(p.accountNo || c?.accountNo || ""),
+        String(p.reference || ""),
+        Number(p.amount || 0),
+        Number(p.balanceAfter || 0),
+        String(p.issuedBy || "-"),
       ]);
     });
 
-    const dws=XLSX.utils.aoa_to_sheet(detail);
-    dws['!cols']=[
-      {wch:15},{wch:18},{wch:28},{wch:18},
-      {wch:28},{wch:17},{wch:22},{wch:24}
+    const dws = XLSX.utils.aoa_to_sheet(detail);
+    dws["!cols"] = [
+      { wch: 15 },
+      { wch: 18 },
+      { wch: 28 },
+      { wch: 18 },
+      { wch: 28 },
+      { wch: 17 },
+      { wch: 22 },
+      { wch: 24 },
     ];
-    formatMoneyColumn(dws,5);
-    formatMoneyColumn(dws,6);
-    XLSX.utils.book_append_sheet(wb,dws,'Payment Audit');
+    formatMoneyColumn(dws, 5);
+    formatMoneyColumn(dws, 6);
+    XLSX.utils.book_append_sheet(wb, dws, "Payment Audit");
 
-    addCollectorSummary(yearPayments,'Collector Summary',year);
+    addCollectorSummary(yearPayments, "Collector Summary", year);
     addOutstandingSheet();
 
-    wb.Props={
-      Title:`NetBill Yearly Collection Report - ${year}`,
-      Subject:'Complete Collection, Outstanding Balance, and Collector Audit Report',
-      Author:'NetBill - CM Philippines',
-      Company:'CM Philippines'
+    wb.Props = {
+      Title: `NetBill Yearly Collection Report - ${year}`,
+      Subject:
+        "Complete Collection, Outstanding Balance, and Collector Audit Report",
+      Author: "NetBill - CM Philippines",
+      Company: "CM Philippines",
     };
-    XLSX.writeFile(wb,`NetBill_Yearly_Report_${year}.xlsx`,{
-      bookType:'xlsx',compression:true,cellStyles:true
+    XLSX.writeFile(wb, `NetBill_Yearly_Report_${year}.xlsx`, {
+      bookType: "xlsx",
+      compression: true,
+      cellStyles: true,
     });
   }
 }
 
-function renderOverdueCustomers(){
-  const table = $('overdueCustomerTable');
-  if(!table) return;
+function renderOverdueCustomers() {
+  const table = $("overdueCustomerTable");
+  if (!table) return;
 
-  const overdue = customers.filter(c => getStatus(c) === 'Overdue');
-  table.innerHTML = overdue.map(c => `
-    <tr>
-      <td>${c.accountNo}</td>
-      <td>${c.name}</td>
-      <td>${c.dueDate || '-'}</td>
-      <td>${money(c.balance)}</td>
-    </tr>
-  `).join('') || `<tr><td colspan="4">No overdue customers.</td></tr>`;
+  const overdue = customers.filter((c) => getStatus(c) === "Overdue");
+  table.innerHTML =
+    overdue
+      .map(
+        (c) => ` <tr> <td>${c.accountNo}</td> <td>${c.name}</td> <td>${c.dueDate || "-"}</td> <td>${money(c.balance)}</td> </tr> `
+      )
+      .join("") || `<tr><td colspan="4">No overdue customers.</td></tr>`;
 }
 
-function renderReports(){
-  const totalRevenue = payments.reduce((sum,p)=>sum + Number(p.amount || 0),0);
-  const receivables = customers.reduce((sum,c)=>sum + Math.max(0,Number(c.balance || 0)),0);
+function renderReports() {
+  const totalRevenue = payments.reduce(
+    (sum, p) => sum + Number(p.amount || 0),
+    0
+  );
+  const receivables = customers.reduce(
+    (sum, c) => sum + Math.max(0, Number(c.balance || 0)),
+    0
+  );
 
-  $('reportPayments').textContent = payments.length;
-  $('reportRevenue').textContent = money(totalRevenue);
-  $('reportReceivables').textContent = money(receivables);
+  $("reportPayments").textContent = payments.length;
+  $("reportRevenue").textContent = money(totalRevenue);
+  $("reportReceivables").textContent = money(receivables);
 
   const counts = {
-    Paid: customers.filter(c=>getStatus(c)==='Paid').length,
-    Unpaid: customers.filter(c=>getStatus(c)==='Unpaid').length,
-    Overdue: customers.filter(c=>getStatus(c)==='Overdue').length
+    Paid: customers.filter((c) => getStatus(c) === "Paid").length,
+    Unpaid: customers.filter((c) => getStatus(c) === "Unpaid").length,
+    Overdue: customers.filter((c) => getStatus(c) === "Overdue").length,
   };
 
-  $('statusSummary').innerHTML = Object.entries(counts).map(([k,v]) => `
-    <div class="summary-item"><span>${k}</span><strong>${v}</strong></div>
-  `).join('');
+  $("statusSummary").innerHTML = Object.entries(counts)
+    .map(
+      ([k, v]) => ` <div class="summary-item"><span>${k}</span><strong>${v}</strong></div> `
+    )
+    .join("");
 
   renderCollectionYearOptions();
   renderCollectionReport();
   renderOverdueCustomers();
 }
 
-function fillCustomerSelects(){
-  const options = customers.map(c => `<option value="${c.id}">${c.accountNo} - ${c.name}</option>`).join('');
-  $('paymentCustomer').innerHTML = options || `<option value="">No customers</option>`;
-  $('billCustomer').innerHTML = options || `<option value="">No customers</option>`;
-  if($('ledgerCustomer')){
-    const previous = $('ledgerCustomer').value;
-    $('ledgerCustomer').innerHTML = options || `<option value="">No customers</option>`;
-    if(previous && customers.some(c => String(c.id) === String(previous))){
-      $('ledgerCustomer').value = previous;
-    } else if(customers.length){
-      $('ledgerCustomer').value = String(customers[0].id);
+function fillCustomerSelects() {
+  const options = customers
+    .map((c) => `<option value="${c.id}">${c.accountNo} - ${c.name}</option>`)
+    .join("");
+  $("paymentCustomer").innerHTML =
+    options || `<option value="">No customers</option>`;
+  $("billCustomer").innerHTML =
+    options || `<option value="">No customers</option>`;
+  if ($("ledgerCustomer")) {
+    const previous = $("ledgerCustomer").value;
+    $("ledgerCustomer").innerHTML =
+      options || `<option value="">No customers</option>`;
+    if (previous && customers.some((c) => String(c.id) === String(previous))) {
+      $("ledgerCustomer").value = previous;
+    } else if (customers.length) {
+      $("ledgerCustomer").value = String(customers[0].id);
     }
   }
 }
-function setupPaymentSearch(){
-  const searchBox = document.getElementById('paymentSearch');
+function setupPaymentSearch() {
+  const searchBox = document.getElementById("paymentSearch");
 
-  if(searchBox){
-    searchBox.addEventListener('input', () => {
+  if (searchBox) {
+    searchBox.addEventListener("input", () => {
       const search = searchBox.value.toLowerCase().trim();
 
-      const filtered = customers.filter(c =>
-        c.name.toLowerCase().includes(search) ||
-        c.accountNo.toLowerCase().includes(search)
+      const filtered = customers.filter(
+        (c) =>
+          c.name.toLowerCase().includes(search) ||
+          c.accountNo.toLowerCase().includes(search)
       );
 
-      document.getElementById('paymentCustomer').innerHTML =
-        filtered.map(c =>
-          `<option value="${c.id}">${c.accountNo} - ${c.name}</option>`
-        ).join('') || '<option value="">No customer found</option>';
+      document.getElementById("paymentCustomer").innerHTML =
+        filtered
+          .map(
+            (c) => `<option value="${c.id}">${c.accountNo} - ${c.name}</option>`
+          )
+          .join("") || '<option value="">No customer found</option>';
     });
   }
 }
-function renderAdvanceReceipts(){
-  const table = document.getElementById('advanceReceiptTable');
-  if(!table) return;
+function renderAdvanceReceipts() {
+  const table = document.getElementById("advanceReceiptTable");
+  if (!table) return;
 
   const today = todayISO();
 
-  const dueAdvancePayments = payments.filter(p =>
-    p.isAdvance === true &&
-    p.advanceFor === today
+  const dueAdvancePayments = payments.filter(
+    (p) => p.isAdvance === true && p.advanceFor === today
   );
-const advanceReceiptNav = document.getElementById('advanceReceiptNav');
+  const advanceReceiptNav = document.getElementById("advanceReceiptNav");
 
-if(advanceReceiptNav){
-  advanceReceiptNav.classList.toggle(
-    'advance-due-blink',
-    dueAdvancePayments.length > 0 &&
-    !advanceReceiptNav.classList.contains('active')
-  );
-}
-  if(!dueAdvancePayments.length){
-    table.innerHTML = `
-      <tr>
-        <td colspan="6" style="text-align:center;">
-          No advance payment receipts due today.
-        </td>
-      </tr>
-    `;
+  if (advanceReceiptNav) {
+    advanceReceiptNav.classList.toggle(
+      "advance-due-blink",
+      dueAdvancePayments.length > 0 &&
+        !advanceReceiptNav.classList.contains("active")
+    );
+  }
+  if (!dueAdvancePayments.length) {
+    table.innerHTML = ` <tr> <td colspan="6" style="text-align:center;"> No advance payment receipts due today. </td> </tr> `;
     return;
   }
 
-  table.innerHTML = dueAdvancePayments.map(p => {
-    const c = customers.find(x =>
-      String(x.id) === String(p.customerId)
-    ) || {};
+  table.innerHTML = dueAdvancePayments
+    .map((p) => {
+      const c =
+        customers.find((x) => String(x.id) === String(p.customerId)) || {};
 
-    return `
-      <tr>
-        <td>${c.accountNo || '-'}</td>
-        <td>${c.name || '-'}</td>
-        <td>${p.receiptNo || '-'}</td>
-        <td>₱${Number(p.amount || 0).toLocaleString()}</td>
-        <td>${p.advanceFor || '-'}</td>
-        <td>
-          <button class="secondary" onclick="showReceipt('${p.receiptNo}')">
-            View
-          </button>
-        </td>
-      </tr>
-    `;
-  }).join('');
+      return ` <tr> <td>${c.accountNo || "-"}</td> <td>${c.name || "-"}</td> <td>${p.receiptNo || "-"}</td> <td>₱${Number(p.amount || 0).toLocaleString()}</td> <td>${p.advanceFor || "-"}</td> <td> <button class="secondary" onclick="showReceipt('${p.receiptNo}')"> View </button> </td> </tr> `;
+    })
+    .join("");
 }
-function renderAll(){
+function renderAll() {
   cleanupPaidActivationDuplicates();
   setupPaymentSearch();
   renderDashboard();
@@ -1213,159 +1279,176 @@ function renderAll(){
   saveData();
 }
 
-function openCustomerModal(customer=null){
+function openCustomerModal(customer = null) {
   editingCustomerId = customer ? customer.id : null;
-  $('customerModalTitle').textContent = customer ? 'Edit Customer' : 'Add Customer';
-  $('accountNo').value = customer?.accountNo || nextAccountNo();
-  $('customerName').value = customer?.name || '';
-  $('customerAddress').value = customer?.address || '';
-  $('customerContact').value = customer?.contact || '';
-  $('customerPlan').value = customer?.plan || '';
-  $('customerFee').value = customer?.fee || '';
-  $('activationDate').value = customer?.activationDate || todayISO();
-  $('customerDue').value = customer?.dueDate || '';
+  $("customerModalTitle").textContent = customer
+    ? "Edit Customer"
+    : "Add Customer";
+  $("accountNo").value = customer?.accountNo || nextAccountNo();
+  $("customerName").value = customer?.name || "";
+  $("customerAddress").value = customer?.address || "";
+  $("customerContact").value = customer?.contact || "";
+  $("customerPlan").value = customer?.plan || "";
+  $("customerFee").value = customer?.fee || "";
+  $("activationDate").value = customer?.activationDate || todayISO();
+  $("customerDue").value = customer?.dueDate || "";
 
-  if(customer){
-    $('initialPaymentStatus').value = Number(customer.balance || 0) <= 0 ? 'paid' : 'unpaid';
+  if (customer) {
+    $("initialPaymentStatus").value =
+      Number(customer.balance || 0) <= 0 ? "paid" : "unpaid";
   } else {
-    $('initialPaymentStatus').value = 'paid';
+    $("initialPaymentStatus").value = "paid";
   }
 
-  $('customerModal').classList.remove('hidden');
+  $("customerModal").classList.remove("hidden");
 }
 
-window.editCustomer = id => {
-  const c = customers.find(x => String(x.id) === String(id));
+window.editCustomer = (id) => {
+  const c = customers.find((x) => String(x.id) === String(id));
 
   if (!c) {
-    alert('Customer record not found.');
+    alert("Customer record not found.");
     return;
   }
 
   openCustomerModal(c);
 };
 
-window.deleteCustomer = async id => {
-  const c = customers.find(x => x.id == id);
+window.deleteCustomer = async (id) => {
+  const c = customers.find((x) => x.id == id);
   if (!c) return;
 
-  if (!confirm(`Delete ${c.name}? This will permanently remove this customer.`)) {
+  if (
+    !confirm(`Delete ${c.name}? This will permanently remove this customer.`)
+  ) {
     return;
   }
 
-  const { error } = await supabaseClient
-    .from('clients')
-    .delete()
-    .eq('id', id);
+  const { error } = await supabaseClient.from("clients").delete().eq("id", id);
 
   if (error) {
     console.error(error);
-    alert('Error deleting customer: ' + error.message);
+    alert("Error deleting customer: " + error.message);
     return;
   }
 
-  alert('Customer deleted successfully.');
+  alert("Customer deleted successfully.");
 
   await loadCustomersFromSupabase();
   renderAll();
 };
 
-function closeCustomerModal(){
-  $('customerModal').classList.add('hidden');
+function closeCustomerModal() {
+  $("customerModal").classList.add("hidden");
   editingCustomerId = null;
 }
 
-$('addCustomerBtn').addEventListener('click',()=>openCustomerModal());
-$('quickAddBtn').addEventListener('click',()=>openCustomerModal());
-$('closeCustomerModal').addEventListener('click',closeCustomerModal);
-$('cancelCustomerBtn').addEventListener('click',closeCustomerModal);
-function openExistingCustomerModal(){
-  $('existingCustomerName').value = '';
-  $('existingCustomerAddress').value = '';
-  $('existingCustomerContact').value = '';
-  $('existingCustomerPlan').value = '';
-  $('existingCustomerFee').value = '';
-  $('existingCustomerDue').value = '';
-  $('existingCustomerBalance').value = '0';
+$("addCustomerBtn").addEventListener("click", () => openCustomerModal());
+$("quickAddBtn").addEventListener("click", () => openCustomerModal());
+$("closeCustomerModal").addEventListener("click", closeCustomerModal);
+$("cancelCustomerBtn").addEventListener("click", closeCustomerModal);
+function openExistingCustomerModal() {
+  $("existingCustomerName").value = "";
+  $("existingCustomerAddress").value = "";
+  $("existingCustomerContact").value = "";
+  $("existingCustomerPlan").value = "";
+  $("existingCustomerFee").value = "";
+  $("existingCustomerDue").value = "";
+  $("existingCustomerBalance").value = "0";
 
-  $('existingCustomerModal').classList.remove('hidden');
+  $("existingCustomerModal").classList.remove("hidden");
 }
 
-function closeExistingCustomerModal(){
-  $('existingCustomerModal').classList.add('hidden');
+function closeExistingCustomerModal() {
+  $("existingCustomerModal").classList.add("hidden");
 }
 
-$('addExistingCustomerBtn').addEventListener('click',openExistingCustomerModal);
-$('closeExistingCustomerModal').addEventListener('click',closeExistingCustomerModal);
-$('cancelExistingCustomerBtn').addEventListener('click',closeExistingCustomerModal);
-$('saveExistingCustomerBtn').addEventListener('click', async ()=>{
-  const name = $('existingCustomerName').value.trim();
-  const address = $('existingCustomerAddress').value.trim();
-  const contact = $('existingCustomerContact').value.trim();
-  const plan = $('existingCustomerPlan').value.trim();
-  const fee = Number($('existingCustomerFee').value || 0);
-  const dueDate = $('existingCustomerDue').value;
-  const existingBalance = Number($('existingCustomerBalance').value || 0);
+$("addExistingCustomerBtn").addEventListener(
+  "click",
+  openExistingCustomerModal
+);
+$("closeExistingCustomerModal").addEventListener(
+  "click",
+  closeExistingCustomerModal
+);
+$("cancelExistingCustomerBtn").addEventListener(
+  "click",
+  closeExistingCustomerModal
+);
+$("saveExistingCustomerBtn").addEventListener("click", async () => {
+  const name = $("existingCustomerName").value.trim();
+  const address = $("existingCustomerAddress").value.trim();
+  const contact = $("existingCustomerContact").value.trim();
+  const plan = $("existingCustomerPlan").value.trim();
+  const fee = Number($("existingCustomerFee").value || 0);
+  const dueDate = $("existingCustomerDue").value;
+  const existingBalance = Number($("existingCustomerBalance").value || 0);
 
-  if(!name || !plan || fee <= 0 || !dueDate){
-    alert('Please complete Full Name, Internet Plan, Monthly Rate, and Due Date.');
+  if (!name || !plan || fee <= 0 || !dueDate) {
+    alert(
+      "Please complete Full Name, Internet Plan, Monthly Rate, and Due Date."
+    );
     return;
   }
 
-  if(existingBalance < 0){
-    alert('Existing Balance cannot be negative.');
+  if (existingBalance < 0) {
+    alert("Existing Balance cannot be negative.");
     return;
   }
 
   const accountNo = nextAccountNo();
 
   const { data, error } = await supabaseClient
-    .from('clients')
-    .insert([{
-      account_no: accountNo,
-      name: name,
-      address: address,
-      contact_no: contact,
-      internet_plan: plan,
-      monthly_rate: fee,
-      activation_date: null,
-      due_date: dueDate,
-      current_bill: 0,
-      balance: existingBalance,
-      is_active: true
-    }])
+    .from("clients")
+    .insert([
+      {
+        account_no: accountNo,
+        name: name,
+        address: address,
+        contact_no: contact,
+        internet_plan: plan,
+        monthly_rate: fee,
+        activation_date: null,
+        due_date: dueDate,
+        current_bill: 0,
+        balance: existingBalance,
+        is_active: true,
+      },
+    ])
     .select();
 
-  if(error){
+  if (error) {
     console.error(error);
-    alert('Error saving existing customer: ' + error.message);
+    alert("Error saving existing customer: " + error.message);
     return;
   }
 
-  alert('Existing customer saved successfully.');
+  alert("Existing customer saved successfully.");
 
   await loadCustomersFromSupabase();
   renderAll();
   closeExistingCustomerModal();
 });
-$('saveCustomerBtn').addEventListener('click', async ()=>{
-  const accountNo = $('accountNo').value.trim();
-  const name = $('customerName').value.trim();
-  const address = $('customerAddress').value.trim();
-  const contact = $('customerContact').value.trim();
-  const plan = $('customerPlan').value.trim();
-  const fee = Number($('customerFee').value || 0);
-  const activationDate = $('activationDate').value;
-  const dueDate = $('customerDue').value;
-  const initialPaymentStatus = $('initialPaymentStatus').value;
+$("saveCustomerBtn").addEventListener("click", async () => {
+  const accountNo = $("accountNo").value.trim();
+  const name = $("customerName").value.trim();
+  const address = $("customerAddress").value.trim();
+  const contact = $("customerContact").value.trim();
+  const plan = $("customerPlan").value.trim();
+  const fee = Number($("customerFee").value || 0);
+  const activationDate = $("activationDate").value;
+  const dueDate = $("customerDue").value;
+  const initialPaymentStatus = $("initialPaymentStatus").value;
 
-  if(!accountNo || !name || !plan || fee <= 0){
-    alert('Please complete Account No., Full Name, Internet Plan, and Monthly Rate.');
+  if (!accountNo || !name || !plan || fee <= 0) {
+    alert(
+      "Please complete Account No., Full Name, Internet Plan, and Monthly Rate."
+    );
     return;
   }
 
   const existingCustomer = editingCustomerId
-    ? customers.find(x => String(x.id) === String(editingCustomerId))
+    ? customers.find((x) => String(x.id) === String(editingCustomerId))
     : null;
 
   const customerData = {
@@ -1377,58 +1460,60 @@ $('saveCustomerBtn').addEventListener('click', async ()=>{
     monthly_rate: fee,
     activation_date: activationDate || null,
     due_date: dueDate || null,
-    current_bill: initialPaymentStatus === 'paid' ? 0 : fee,
-balance: initialPaymentStatus === 'paid' ? 0 : fee,
-    is_active: true
+    current_bill: initialPaymentStatus === "paid" ? 0 : fee,
+    balance: initialPaymentStatus === "paid" ? 0 : fee,
+    is_active: true,
   };
 
   let result;
 
-  if(editingCustomerId){
+  if (editingCustomerId) {
     result = await supabaseClient
-      .from('clients')
+      .from("clients")
       .update(customerData)
-      .eq('id', editingCustomerId)
+      .eq("id", editingCustomerId)
       .select();
   } else {
     result = await supabaseClient
-      .from('clients')
+      .from("clients")
       .insert([customerData])
       .select();
   }
 
-  if(result.error){
+  if (result.error) {
     console.error(result.error);
-    alert('Error saving customer: ' + result.error.message);
+    alert("Error saving customer: " + result.error.message);
     return;
   }
 
-  if(result.data?.[0]){
+  if (result.data?.[0]) {
     const savedCustomer = result.data[0];
 
-    if(initialPaymentStatus === 'paid'){
-        await recordInitialActivationPayment(savedCustomer, 'paid');
+    if (initialPaymentStatus === "paid") {
+      await recordInitialActivationPayment(savedCustomer, "paid");
     } else {
-        const paymentKey = `ACTIVATION-PAID-${savedCustomer.id}`;
+      const paymentKey = `ACTIVATION-PAID-${savedCustomer.id}`;
 
-        const { error: deletePaymentError } = await supabaseClient
-            .from('payments')
-            .delete()
-            .eq('client_id', savedCustomer.id)
-            .eq('reference_no', paymentKey);
+      const { error: deletePaymentError } = await supabaseClient
+        .from("payments")
+        .delete()
+        .eq("client_id", savedCustomer.id)
+        .eq("reference_no", paymentKey);
 
-        if(deletePaymentError){
-            console.error('Error removing activation payment:', deletePaymentError);
-            alert('Error removing activation payment: ' + deletePaymentError.message);
-            return;
-        }
+      if (deletePaymentError) {
+        console.error("Error removing activation payment:", deletePaymentError);
+        alert(
+          "Error removing activation payment: " + deletePaymentError.message
+        );
+        return;
+      }
 
-        payments = payments.filter(p => p.reference !== paymentKey);
-        ledgerEntries = ledgerEntries.filter(e => e.reference !== paymentKey);
+      payments = payments.filter((p) => p.reference !== paymentKey);
+      ledgerEntries = ledgerEntries.filter((e) => e.reference !== paymentKey);
     }
   }
 
-  alert('Customer saved successfully.');
+  alert("Customer saved successfully.");
 
   await loadCustomersFromSupabase();
   renderAll();
@@ -1436,330 +1521,299 @@ balance: initialPaymentStatus === 'paid' ? 0 : fee,
   closeCustomerModal();
 });
 
-$('createBillBtn').addEventListener('click', async ()=>{
-  const customerId = $('billCustomer').value;
-  const amount = Number($('billAmount').value || 0);
-  const dueDate = $('billDueDate').value;
-  const c = customers.find(x=>x.id===customerId);
+$("createBillBtn").addEventListener("click", async () => {
+  const customerId = $("billCustomer").value;
+  const amount = Number($("billAmount").value || 0);
+  const dueDate = $("billDueDate").value;
+  const c = customers.find((x) => x.id === customerId);
 
-  if(!c || amount <= 0 || !dueDate){
-    alert('Select a customer, enter billing amount, and set the due date.');
+  if (!c || amount <= 0 || !dueDate) {
+    alert("Select a customer, enter billing amount, and set the due date.");
     return;
   }
 
   const previousBalance = Number(c.balance || 0);
-const newBalance = previousBalance + amount;
+  const newBalance = previousBalance + amount;
 
-const { error: billError } = await supabaseClient
-  .from('billing')
-  .insert([{
-    client_id: c.id,
-    billing_month: todayISO(),
-    previous_balance: previousBalance,
-    current_charge: amount,
-    due_date: dueDate,
-    status: 'Unpaid',
-    description: 'Monthly internet bill'
-  }]);
+  const { error: billError } = await supabaseClient.from("billing").insert([
+    {
+      client_id: c.id,
+      billing_month: todayISO(),
+      previous_balance: previousBalance,
+      current_charge: amount,
+      due_date: dueDate,
+      status: "Unpaid",
+      description: "Monthly internet bill",
+    },
+  ]);
 
-if(billError){
-  console.error(billError);
-  alert('Error saving bill: ' + billError.message);
-  return;
-}
-
-const { error: clientError } = await supabaseClient
-  .from('clients')
-  .update({
-    current_bill: amount,
-    balance: newBalance,
-    due_date: dueDate
-  })
-  .eq('id', c.id);
-
-if(clientError){
-  console.error(clientError);
-  alert('Bill was created, but customer balance update failed: ' + clientError.message);
-  return;
-}
-
-await loadCustomersFromSupabase();
-renderAll();
-
-alert('Monthly bill saved successfully.');
-});
-
-$('recordPaymentBtn').addEventListener('click', async ()=>{
-  const customerId = $('paymentCustomer').value;
-  const amount = Number($('paymentAmount').value || 0);
-  const date = $('paymentDate').value || todayISO();
-  const time = $('paymentTime').value || new Date().toTimeString().slice(0,5);
-  const reference = $('paymentReference').value.trim();
-  const issuedBy = $('paymentIssuedBy')?.value.trim() || '';
-  const c = customers.find(x=>x.id===customerId);
-console.log("SELECTED CUSTOMER:", c);
-  if(!c || amount <= 0){
-    alert('Select a customer and enter a valid payment amount.');
+  if (billError) {
+    console.error(billError);
+    alert("Error saving bill: " + billError.message);
     return;
   }
-  if(!issuedBy){
-    alert('Please enter the name of the collector.');
+
+  const { error: clientError } = await supabaseClient
+    .from("clients")
+    .update({
+      current_bill: amount,
+      balance: newBalance,
+      due_date: dueDate,
+    })
+    .eq("id", c.id);
+
+  if (clientError) {
+    console.error(clientError);
+    alert(
+      "Bill was created, but customer balance update failed: " +
+        clientError.message
+    );
+    return;
+  }
+
+  await loadCustomersFromSupabase();
+  renderAll();
+
+  alert("Monthly bill saved successfully.");
+});
+
+$("recordPaymentBtn").addEventListener("click", async () => {
+  const customerId = $("paymentCustomer").value;
+  const amount = Number($("paymentAmount").value || 0);
+  const date = $("paymentDate").value || todayISO();
+  const time = $("paymentTime").value || new Date().toTimeString().slice(0, 5);
+  const reference = $("paymentReference").value.trim();
+  const issuedBy = $("paymentIssuedBy")?.value.trim() || "";
+  const c = customers.find((x) => x.id === customerId);
+  console.log("SELECTED CUSTOMER:", c);
+  if (!c || amount <= 0) {
+    alert("Select a customer and enter a valid payment amount.");
+    return;
+  }
+  if (!issuedBy) {
+    alert("Please enter the name of the collector.");
     return;
   }
 
   const previousBalance = Number(c.balance || 0);
-const isAdvance = previousBalance === 0;
+  const isAdvance = previousBalance === 0;
 
-if(!isAdvance && amount > previousBalance){
-  alert('Please pay only up to the current balance first. Once the balance is zero, you can make a separate advance payment.');
-  return;
-}
-
-if(isAdvance && amount !== Number(c.fee || 0)){
-  alert(`Advance payment must be exactly the monthly rate: ₱${Number(c.fee || 0).toLocaleString()}`);
-  return;
-}
-
-const newBalance = isAdvance
-  ? 0
-  : Math.max(0, previousBalance - amount);
-
-const receiptNo = await nextReceiptNo();
-let advanceFor = null;
-
-if(isAdvance){
-  let targetDate = parseLocalDate(c.dueDate);
-
-  if(!targetDate){
-    alert('Customer has no valid due date for advance payment.');
+  if (!isAdvance && amount > previousBalance) {
+    alert(
+      "Please pay only up to the current balance first. Once the balance is zero, you can make a separate advance payment."
+    );
     return;
   }
 
-  const { data: existingAdvances, error: advanceError } = await supabaseClient
-    .from('payments')
-    .select('advance_for_date')
-    .eq('client_id', c.id)
-    .eq('is_advance', true)
-    .order('advance_for_date', { ascending: true });
-
-  if(advanceError){
-    console.error(advanceError);
-    alert('Error checking previous advance payments: ' + advanceError.message);
+  if (isAdvance && amount !== Number(c.fee || 0)) {
+    alert(
+      `Advance payment must be exactly the monthly rate: ₱${Number( c.fee || 0 ).toLocaleString()}`
+    );
     return;
   }
 
-  const reservedDates = new Set(
-    (existingAdvances || [])
-      .map(p => p.advance_for_date)
-      .filter(Boolean)
-  );
+  const newBalance = isAdvance ? 0 : Math.max(0, previousBalance - amount);
 
-  while(reservedDates.has(toISODateLocal(targetDate))){
-    targetDate = addMonthsClamped(targetDate, 1);
+  const receiptNo = await nextReceiptNo();
+  let advanceFor = null;
+
+  if (isAdvance) {
+    let targetDate = parseLocalDate(c.dueDate);
+
+    if (!targetDate) {
+      alert("Customer has no valid due date for advance payment.");
+      return;
+    }
+
+    const { data: existingAdvances, error: advanceError } = await supabaseClient
+      .from("payments")
+      .select("advance_for_date")
+      .eq("client_id", c.id)
+      .eq("is_advance", true)
+      .order("advance_for_date", { ascending: true });
+
+    if (advanceError) {
+      console.error(advanceError);
+      alert(
+        "Error checking previous advance payments: " + advanceError.message
+      );
+      return;
+    }
+
+    const reservedDates = new Set(
+      (existingAdvances || []).map((p) => p.advance_for_date).filter(Boolean)
+    );
+
+    while (reservedDates.has(toISODateLocal(targetDate))) {
+      targetDate = addMonthsClamped(targetDate, 1);
+    }
+
+    advanceFor = toISODateLocal(targetDate);
   }
 
-  advanceFor = toISODateLocal(targetDate);
-  
-}
-  
-const { data: latestBill } = await supabaseClient
-  .from('billing')
-  .select('id')
-  .eq('client_id', c.id)
-  .order('created_at', { ascending: false })
-  .limit(1)
-  .maybeSingle();
+  const { data: latestBill } = await supabaseClient
+    .from("billing")
+    .select("id")
+    .eq("client_id", c.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
-const { data: savedPayment, error: paymentError } = await supabaseClient
-  .from('payments')
-  .insert([{
-    billing_id: latestBill?.id || null,
-    client_id: c.id,
-    amount: amount,
-    payment_date: date,
-    payment_time: time,
-    payment_method: 'Cash',
-    receipt_no: receiptNo,
-    reference_no: reference || receiptNo,
-    notes: '',
-    collector_email: '',
-    collected_by: issuedBy,
-    balance_before: previousBalance,
-    balance_after: newBalance,
-is_advance: isAdvance,
-advance_for_date: advanceFor
-  }])
-  .select()
-  .single();
+  const { data: savedPayment, error: paymentError } = await supabaseClient
+    .from("payments")
+    .insert([
+      {
+        billing_id: latestBill?.id || null,
+        client_id: c.id,
+        amount: amount,
+        payment_date: date,
+        payment_time: time,
+        payment_method: "Cash",
+        receipt_no: receiptNo,
+        reference_no: reference || receiptNo,
+        notes: "",
+        collector_email: "",
+        collected_by: issuedBy,
+        balance_before: previousBalance,
+        balance_after: newBalance,
+        is_advance: isAdvance,
+        advance_for_date: advanceFor,
+      },
+    ])
+    .select()
+    .single();
 
-if(paymentError){
-  console.error(paymentError);
-  alert('Error saving payment: ' + paymentError.message);
-  return;
-}
+  if (paymentError) {
+    console.error(paymentError);
+    alert("Error saving payment: " + paymentError.message);
+    return;
+  }
 
-const { error: clientError } = await supabaseClient
-  .from('clients')
-  .update({
-    balance: newBalance
-  })
-  .eq('id', c.id);
+  const { error: clientError } = await supabaseClient
+    .from("clients")
+    .update({
+      balance: newBalance,
+    })
+    .eq("id", c.id);
 
-if(clientError){
-  console.error(clientError);
-  alert('Payment saved, but customer balance update failed: ' + clientError.message);
-  return;
-}
+  if (clientError) {
+    console.error(clientError);
+    alert(
+      "Payment saved, but customer balance update failed: " +
+        clientError.message
+    );
+    return;
+  }
 
-const payment = {
-  id: savedPayment.id,
-  receiptNo: receiptNo,
-  customerId: c.id,
-  customerName: c.name,
-  accountNo: c.accountNo,
-  amount,
-  date,
-  paymentTime: time,
-  reference: reference || receiptNo,
-  issuedBy,
-  balanceAfter: newBalance,
-isAdvance: isAdvance,
-advanceFor: advanceFor
-};
+  const payment = {
+    id: savedPayment.id,
+    receiptNo: receiptNo,
+    customerId: c.id,
+    customerName: c.name,
+    accountNo: c.accountNo,
+    amount,
+    date,
+    paymentTime: time,
+    reference: reference || receiptNo,
+    issuedBy,
+    balanceAfter: newBalance,
+    isAdvance: isAdvance,
+    advanceFor: advanceFor,
+  };
 
-payments.push({...payment});
+  payments.push({ ...payment });
 
-$('paymentAmount').value = '';
-$('paymentReference').value = '';
-if($('paymentIssuedBy')) $('paymentIssuedBy').value = '';
+  $("paymentAmount").value = "";
+  $("paymentReference").value = "";
+  if ($("paymentIssuedBy")) $("paymentIssuedBy").value = "";
 
-// await loadCustomersFromSupabase();
-showReceipt(payment.receiptNo);
-renderAll();
+  // await loadCustomersFromSupabase();
+  showReceipt(payment.receiptNo);
+  renderAll();
 });
 
-window.showReceipt = receiptNo => {
-  const p = payments.find(x => 
-  x.receiptNo === receiptNo
-);
+window.showReceipt = (receiptNo) => {
+  const p = payments.find((x) => x.receiptNo === receiptNo);
 
   if (!p) {
-    alert('Payment record not found.');
+    alert("Payment record not found.");
     return;
   }
 
   const customerId = p.customerId || p.customer_id || p.client_id;
 
-  const c = customers.find(x =>
-    String(x.id) === String(customerId)
-  ) || {};
+  const c = customers.find((x) => String(x.id) === String(customerId)) || {};
 
   const finalReceiptNo =
     p.receiptNo ||
     p.receipt_no ||
     p.reference_no ||
     p.reference ||
-    `PAY-${p.id || 'OLD'}`;
-const finalPaymentTime = (() => {
-  const rawTime = p.paymentTime || p.payment_time;
+    `PAY-${p.id || "OLD"}`;
+  const finalPaymentTime = (() => {
+    const rawTime = p.paymentTime || p.payment_time;
 
-  if (!rawTime) return '-';
+    if (!rawTime) return "-";
 
-  const [hour, minute] = rawTime.split(':');
+    const [hour, minute] = rawTime.split(":");
 
-  const date = new Date();
-  date.setHours(Number(hour));
-  date.setMinutes(Number(minute));
+    const date = new Date();
+    date.setHours(Number(hour));
+    date.setMinutes(Number(minute));
 
-  return date.toLocaleTimeString([], {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  });
-})();
+    return date.toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  })();
   const finalDate =
-    p.date ||
-    p.payment_date ||
-    p.created_at?.split('T')[0] ||
-    '-';
+    p.date || p.payment_date || p.created_at?.split("T")[0] || "-";
 
   const finalAccountNo =
-    p.accountNo ||
-    p.account_no ||
-    c.accountNo ||
-    c.account_no ||
-    '-';
+    p.accountNo || p.account_no || c.accountNo || c.account_no || "-";
 
-  const finalCustomerName =
-    p.customerName ||
-    p.customer_name ||
-    c.name ||
-    '-';
+  const finalCustomerName = p.customerName || p.customer_name || c.name || "-";
 
-  const finalPlan =
-    p.plan ||
-    c.plan ||
-    '-';
+  const finalPlan = p.plan || c.plan || "-";
 
   const finalReference =
-    p.reference ||
-    p.reference_no ||
-    p.payment_method ||
-    'Cash';
+    p.reference || p.reference_no || p.payment_method || "Cash";
 
   const finalIssuedBy =
-    p.issuedBy ||
-    p.issued_by ||
-    p.collected_by ||
-    p.collector_email ||
-    '-';
+    p.issuedBy || p.issued_by || p.collected_by || p.collector_email || "-";
 
-  const finalAmount =
-    Number(p.amount || 0);
+  const finalAmount = Number(p.amount || 0);
 
-  const finalBalance =
-    Number(
-      p.balanceAfter ??
-      p.balance_after ??
-      c.balance ??
-      0
-    );
-const isAdvancePayment =
-  p.isAdvance === true ||
-  p.is_advance === true ||
-  Boolean(p.advanceFor || p.advance_for_date || p.advance_for);
+  const finalBalance = Number(
+    p.balanceAfter ?? p.balance_after ?? c.balance ?? 0
+  );
+  const isAdvancePayment =
+    p.isAdvance === true ||
+    p.is_advance === true ||
+    Boolean(p.advanceFor || p.advance_for_date || p.advance_for);
 
-const advanceForDate =
-  p.advanceFor ||
-  p.advance_for_date ||
-  p.advance_for ||
-  payments.find(x =>
-    String(x.receiptNo) === String(finalReceiptNo)
-  )?.advanceFor ||
-  '';
-const createdDateTime =
-  new Date().toLocaleString([], {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
+  const advanceForDate =
+    p.advanceFor ||
+    p.advance_for_date ||
+    p.advance_for ||
+    payments.find((x) => String(x.receiptNo) === String(finalReceiptNo))
+      ?.advanceFor ||
+    "";
+  const createdDateTime = new Date().toLocaleString([], {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
   });
-  
-  $('receiptContent').innerHTML = `
-    <div class="receipt">
-      <h2>NETBILL</h2>
-      <div class="center">Internet Billing System</div>
-      <div class="center">Official Payment Receipt</div>
-      ${isAdvancePayment ? `
+
+  $("receiptContent").innerHTML = ` <div class="receipt"> <h2>NETBILL</h2> <div class="center">Internet Billing System</div> <div class="center">Official Payment Receipt</div> ${ isAdvancePayment ? `
 <div style="margin:8px 0 12px 0; text-align:left;">
   <div><strong>ADVANCE PAYMENT</strong></div>
   <div>For Due Date: <strong>${advanceForDate}</strong></div>
-</div>
-` : ''}
-      <br>
-      <div class="receipt-row"><span>Receipt No.</span><strong>${finalReceiptNo}</strong></div>
+</div> ` : "" } <br> <div class="receipt-row"><span>Receipt No.</span><strong>${finalReceiptNo}</strong></div>
       <div class="receipt-row"><span>Date</span><strong>${finalDate}</strong></div>
 
 <div class="receipt-row"><span>Payment Time</span><strong>${finalPaymentTime}</strong></div>
@@ -1768,117 +1822,116 @@ const createdDateTime =
       <div class="receipt-row"><span>Plan</span><strong>${finalPlan}</strong></div>
       <div class="receipt-row"><span>Reference</span><strong>${finalReference}</strong></div>
       <div class="receipt-row"><span>Payment Received By</span><strong>${finalIssuedBy}</strong></div>
-      <div class="receipt-row receipt-total"><span>Amount Paid</span><strong>${money(finalAmount)}</strong></div>
-      <div class="receipt-row"><span>Remaining Balance</span><strong>${money(finalBalance)}</strong></div>
+      <div class="receipt-row receipt-total"><span>Amount Paid</span><strong>${money(
+        finalAmount
+      )}</strong></div>
+      <div class="receipt-row"><span>Remaining Balance</span><strong>${money(
+        finalBalance
+      )}</strong></div>
       <div class="receipt-row"><span>CDT</span><strong>${createdDateTime}</strong></div>
       <br>
-      <div class="center">Thank you for your payment.</div>
-    </div>
-  `;
+      <div class="center">Thank you for your payment.</div> </div> `;
 
-  $('receiptModal').classList.remove('hidden');
+  $("receiptModal").classList.remove("hidden");
 };
 
-$('closeReceiptBtn').addEventListener('click',()=>$('receiptModal').classList.add('hidden'));
-if($('downloadReceiptBtn')){
-  $('downloadReceiptBtn').addEventListener('click', async ()=>{
-    const receipt = $('receiptContent');
-    if(!receipt) return;
-    if(typeof html2canvas === 'undefined'){
-      alert('Receipt downloader is still loading. Please try again.');
+$("closeReceiptBtn").addEventListener("click", () =>
+  $("receiptModal").classList.add("hidden")
+);
+if ($("downloadReceiptBtn")) {
+  $("downloadReceiptBtn").addEventListener("click", async () => {
+    const receipt = $("receiptContent");
+    if (!receipt) return;
+    if (typeof html2canvas === "undefined") {
+      alert("Receipt downloader is still loading. Please try again.");
       return;
     }
 
-    const btn = $('downloadReceiptBtn');
+    const btn = $("downloadReceiptBtn");
     const oldText = btn.textContent;
     btn.disabled = true;
-    btn.textContent = 'Preparing Receipt...';
+    btn.textContent = "Preparing Receipt...";
 
-    try{
+    try {
       const canvas = await html2canvas(receipt, {
-        backgroundColor:'#ffffff',
-        scale:2,
-        useCORS:true
+        backgroundColor: "#ffffff",
+        scale: 2,
+        useCORS: true,
       });
-      const receiptNo = receipt.querySelector('.receipt-row strong')?.textContent || 'Receipt';
-      const link = document.createElement('a');
-      link.download = `NetBill_${receiptNo.replace(/[^A-Za-z0-9_-]/g,'_')}.png`;
-      link.href = canvas.toDataURL('image/png');
+      const receiptNo =
+        receipt.querySelector(".receipt-row strong")?.textContent || "Receipt";
+      const link = document.createElement("a");
+      link.download = `NetBill_${receiptNo.replace( /[^A-Za-z0-9_-]/g, "_" )}.png`;
+      link.href = canvas.toDataURL("image/png");
       document.body.appendChild(link);
       link.click();
       link.remove();
-    }catch(e){
-      alert('Unable to download the receipt. Please try again.');
-    }finally{
+    } catch (e) {
+      alert("Unable to download the receipt. Please try again.");
+    } finally {
       btn.disabled = false;
       btn.textContent = oldText;
     }
   });
 }
-const printBtn = document.getElementById('printReceiptBtn');
+const printBtn = document.getElementById("printReceiptBtn");
 
-if(printBtn){
-  printBtn.addEventListener('click',()=>{
-const receipt = document.getElementById('receiptContent').innerHTML;;
+if (printBtn) {
+  printBtn.addEventListener("click", () => {
+    const receipt = document.getElementById("receiptContent").innerHTML;
 
-const printWindow = window.open('', '_blank');
+    const printWindow = window.open("", "_blank");
 
-if(!printWindow){
-  alert('Please allow pop-ups to print receipt.');
-  return;
-}
+    if (!printWindow) {
+      alert("Please allow pop-ups to print receipt.");
+      return;
+    }
 
-printWindow.document.write(`
-<html>
-<head>
-<title>Receipt</title>
-<style>
-body{
-font-family: Arial;
-padding:20px;
-}
-</style>
-</head>
-<body>
-${receipt}
-</body>
-</html>
-`);
+    printWindow.document.write(` <html> <head> <title>Receipt</title> <style> body{ font-family: Arial; padding:20px; } </style> </head> <body> ${receipt} </body> </html> `);
 
-printWindow.document.close();
+    printWindow.document.close();
 
-printWindow.onload = function(){
-  printWindow.print();
-};
+    printWindow.onload = function () {
+      printWindow.print();
+    };
   });
 }
-$('customerSearch').addEventListener('input',renderCustomers);
-$('statusFilter').addEventListener('change',renderCustomers);
-if($('collectionReportType')) $('collectionReportType').addEventListener('change',renderCollectionReport);
-if($('collectionYearFilter')) $('collectionYearFilter').addEventListener('change',renderCollectionReport);
-if($('collectionMonthFilter')) $('collectionMonthFilter').addEventListener('change',renderCollectionReport);
-if($('downloadCollectionBtn')) $('downloadCollectionBtn').addEventListener('click',downloadCollectionExcel);
-if($('ledgerCustomer')) $('ledgerCustomer').addEventListener('change',renderLedger);
-if($('viewLedgerBtn')) $('viewLedgerBtn').addEventListener('click',renderLedger);
+$("customerSearch").addEventListener("input", renderCustomers);
+$("statusFilter").addEventListener("change", renderCustomers);
+if ($("collectionReportType"))
+  $("collectionReportType").addEventListener("change", renderCollectionReport);
+if ($("collectionYearFilter"))
+  $("collectionYearFilter").addEventListener("change", renderCollectionReport);
+if ($("collectionMonthFilter"))
+  $("collectionMonthFilter").addEventListener("change", renderCollectionReport);
+if ($("downloadCollectionBtn"))
+  $("downloadCollectionBtn").addEventListener("click", downloadCollectionExcel);
+if ($("ledgerCustomer"))
+  $("ledgerCustomer").addEventListener("change", renderLedger);
+if ($("viewLedgerBtn"))
+  $("viewLedgerBtn").addEventListener("click", renderLedger);
 
-$('paymentDate').value = todayISO();
-$('billDueDate').value = todayISO();
+$("paymentDate").value = todayISO();
+$("billDueDate").value = todayISO();
 
-document.querySelectorAll('.nav-btn').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+document.querySelectorAll(".nav-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document
+      .querySelectorAll(".nav-btn")
+      .forEach((b) => b.classList.remove("active"));
+    document
+      .querySelectorAll(".section")
+      .forEach((s) => s.classList.remove("active"));
 
-    btn.classList.add('active');
-    $(btn.dataset.section).classList.add('active');
-    $('pageTitle').textContent = btn.textContent;
+    btn.classList.add("active");
+    $(btn.dataset.section).classList.add("active");
+    $("pageTitle").textContent = btn.textContent;
 
     renderAdvanceReceipts();
   });
 });
 
 migrateExistingLedgerData();
-runAutomaticMonthlyBilling();
 cleanupPaidActivationDuplicates();
 saveData();
 renderAll();
@@ -1887,58 +1940,62 @@ renderAll();
 let deferredInstallPrompt = null;
 
 function isNetBillInstalled() {
-  return window.matchMedia('(display-mode: standalone)').matches ||
-         window.navigator.standalone === true;
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true
+  );
 }
 
-window.addEventListener('beforeinstallprompt', (event) => {
+window.addEventListener("beforeinstallprompt", (event) => {
   event.preventDefault();
   deferredInstallPrompt = event;
 
-  const installBtn = document.getElementById('installAppBtn');
+  const installBtn = document.getElementById("installAppBtn");
   if (installBtn) {
     installBtn.disabled = false;
-    installBtn.textContent = 'Install NetBill App';
+    installBtn.textContent = "Install NetBill App";
   }
 });
 
-const installAppBtn = document.getElementById('installAppBtn');
+const installAppBtn = document.getElementById("installAppBtn");
 
 if (installAppBtn) {
-  installAppBtn.addEventListener('click', async () => {
+  installAppBtn.addEventListener("click", async () => {
     if (!deferredInstallPrompt) {
-      alert('Installation is not ready yet. In Chrome, tap the ⋮ menu, then choose "Install app" or "Install and create shortcut".');
+      alert(
+        'Installation is not ready yet. In Chrome, tap the ⋮ menu, then choose "Install app" or "Install and create shortcut".'
+      );
       return;
     }
 
     deferredInstallPrompt.prompt();
     const result = await deferredInstallPrompt.userChoice;
 
-    if (result.outcome === 'accepted') {
+    if (result.outcome === "accepted") {
       deferredInstallPrompt = null;
     }
   });
 }
 
-window.addEventListener('appinstalled', () => {
+window.addEventListener("appinstalled", () => {
   deferredInstallPrompt = null;
-  document.getElementById('installGate')?.classList.add('hidden');
-  document.getElementById('appShell')?.classList.remove('hidden');
+  document.getElementById("installGate")?.classList.add("hidden");
+  document.getElementById("appShell")?.classList.remove("hidden");
 });
 function updateSystemDateTime() {
-  const display = document.getElementById('systemDateTime');
+  const display = document.getElementById("systemDateTime");
   if (!display) return;
 
   const now = new Date();
 
-  display.textContent = now.toLocaleString('en-PH', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: 'numeric',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: true
+  display.textContent = now.toLocaleString("en-PH", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
   });
 }
 
