@@ -567,21 +567,8 @@ async function runAutomaticMonthlyBilling() {
   for (const c of customers) {
     if (Number(c.fee || 0) <= 0) continue;
 
-    let cycleDate;
-
-    if (c.activationDate) {
-      // Normal/new customer:
-      // first recurring bill is one month after activation.
-      const activation = parseLocalDate(c.activationDate);
-      if (!activation) continue;
-
-      cycleDate = addMonthsClamped(activation, 1);
-    } else {
-      // Existing customer:
-      // entered Due Date is the first recurring billing date.
-      cycleDate = parseLocalDate(c.dueDate);
-      if (!cycleDate) continue;
-    }
+    let cycleDate = parseLocalDate(c.dueDate);
+if (!cycleDate) continue;
 
     let safety = 0;
 
@@ -613,7 +600,7 @@ async function runAutomaticMonthlyBilling() {
             .select("id, receipt_no, payment_date, payment_time, collected_by")
             .eq("client_id", c.id)
             .eq("is_advance", true)
-            .eq("advance_for", cycleISO)
+            .eq("advance_for_date", cycleISO)
             .limit(1);
 
         if (advanceCheckError) {
@@ -650,14 +637,17 @@ async function runAutomaticMonthlyBilling() {
           continue;
         }
 
-        const { error: clientError } = await supabaseClient
-          .from("clients")
-          .update({
-            current_bill: charge,
-            balance: finalBalance,
-            due_date: cycleISO,
-          })
-          .eq("id", c.id);
+        const nextDueDate = addMonthsClamped(cycleDate, 1);
+const nextDueISO = toISODatelocal(nextDueDate);
+
+const { error: clientError } = await supabaseClient
+  .from("clients")
+  .update({
+    current_bill: charge,
+    balance: finalBalance,
+    due_date: nextDueISO,
+  })
+  .eq("id", c.id);
 
         if (clientError) {
           console.error(
@@ -684,7 +674,7 @@ async function runAutomaticMonthlyBilling() {
 
         c.currentBill = charge;
         c.balance = finalBalance;
-        c.dueDate = cycleISO;
+        c.dueDate = nextDueISO;
 
         addLedgerEntry({
           customerId: c.id,
