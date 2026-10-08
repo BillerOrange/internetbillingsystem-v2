@@ -579,7 +579,7 @@ if (!cycleDate) continue;
       // Check Supabase first to prevent duplicate monthly billing.
       const { data: existingBills, error: checkError } = await supabaseClient
         .from("billing")
-        .select("id")
+        .select("id, previous_balance, current_charge, status, due_date")
         .eq("client_id", c.id)
         .eq("due_date", cycleISO);
 
@@ -2041,7 +2041,7 @@ document.querySelectorAll(".nav-btn").forEach((btn) => {
 });
 
 migrateExistingLedgerData();
-runAutomaticMonthlyBilling();
+
 cleanupPaidActivationDuplicates();
 saveData();
 renderAll();
