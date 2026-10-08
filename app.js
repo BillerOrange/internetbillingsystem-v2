@@ -19,8 +19,14 @@ async function loginUser() {
     return;
   }
   await loadCustomersFromSupabase();
-  await loadBillingAndPaymentsFromSupabase();
-  renderAll();
+await loadBillingAndPaymentsFromSupabase();
+
+await runAutomaticMonthlyBilling();
+
+await loadCustomersFromSupabase();
+await loadBillingAndPaymentsFromSupabase();
+
+renderAll();
 
   document.getElementById("loginScreen").classList.add("hidden");
 
@@ -66,8 +72,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   if (session) {
     await loadCustomersFromSupabase();
-    await loadBillingAndPaymentsFromSupabase();
-    renderAll();
+await loadBillingAndPaymentsFromSupabase();
+
+await runAutomaticMonthlyBilling();
+
+await loadCustomersFromSupabase();
+await loadBillingAndPaymentsFromSupabase();
+
+renderAll();
 
     document.getElementById("loginScreen").classList.add("hidden");
 
