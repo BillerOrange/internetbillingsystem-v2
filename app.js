@@ -579,7 +579,7 @@ if (!cycleDate) continue;
       // Check Supabase first to prevent duplicate monthly billing.
       const { data: existingBills, error: checkError } = await supabaseClient
         .from("billing")
-        .select("id, previous_balance, current_charge, status, due_date")
+        .select("id, previous_balance, current_charge, status, due_date, created_at")
         .eq("client_id", c.id)
         .eq("due_date", cycleISO);
 
@@ -589,7 +589,72 @@ if (!cycleDate) continue;
         safety++;
         continue;
       }
+if (existingBills && existingBills.length > 0) {
+  const existingBill = existingBills[0];
 
+  if (c.dueDate === cycleISO) {
+    let repairedBalance =
+      existingBill.status === "Paid"
+        ? Number(existingBill.previous_balance || 0)
+        : Number(existingBill.previous_balance || 0) +
+          Number(existingBill.current_charge || 0);
+
+    const { data: laterPayments, error: laterPaymentError } =
+      await supabaseClient
+        .from("payments")
+        .select("balance_after, created_at")
+        .eq("client_id", c.id)
+        .gt("created_at", existingBill.created_at)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+    if (laterPaymentError) {
+      console.error(
+        "Error checking payments during billing reconciliation:",
+        laterPaymentError
+      );
+      cycleDate = addMonthsClamped(cycleDate, 1);
+      safety++;
+      continue;
+    }
+
+    if (laterPayments && laterPayments.length > 0) {
+      repairedBalance = Number(laterPayments[0].balance_after || 0);
+    }
+
+    const repairedNextDue = toISODateLocal(
+      addMonthsClamped(cycleDate, 1)
+    );
+
+    const { error: repairError } = await supabaseClient
+      .from("clients")
+      .update({
+        current_bill: Number(existingBill.current_charge || 0),
+        balance: repairedBalance,
+        due_date: repairedNextDue,
+      })
+      .eq("id", c.id)
+      .eq("due_date", cycleISO);
+
+    if (repairError) {
+      console.error(
+        "Error reconciling existing automatic bill:",
+        repairError
+      );
+      cycleDate = addMonthsClamped(cycleDate, 1);
+      safety++;
+      continue;
+    }
+
+    c.currentBill = Number(existingBill.current_charge || 0);
+    c.balance = repairedBalance;
+    c.dueDate = repairedNextDue;
+  }
+
+  cycleDate = addMonthsClamped(cycleDate, 1);
+  safety++;
+  continue;
+}
       if (!existingBills || existingBills.length === 0) {
         const previousBalance = Number(c.balance || 0);
         const charge = Number(c.fee || 0);
