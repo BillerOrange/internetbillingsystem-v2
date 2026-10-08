@@ -638,7 +638,7 @@ if (!cycleDate) continue;
         }
 
         const nextDueDate = addMonthsClamped(cycleDate, 1);
-const nextDueISO = toISODatelocal(nextDueDate);
+const nextDueISO = toISODateLocal(nextDueDate);
 
 const { error: clientError } = await supabaseClient
   .from("clients")
